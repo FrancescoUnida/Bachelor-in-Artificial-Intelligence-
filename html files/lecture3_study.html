@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brain Modelling - Lecture 03 — Neural Encoding</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { min-height: 100vh; background: #08111a; color: #cdd9e5; font-family: 'Georgia', serif; font-size: 15px; }
+
+  /* Header */
+  #header { background: #0d1d2e; border-bottom: 1px solid #1a3048; padding: 16px 28px; display: flex; align-items: center; gap: 16px; }
+  #header-text { flex: 1; }
+  #lecture-label { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: #c0392b; margin-bottom: 3px; }
+  #lecture-title { font-size: 20px; font-weight: bold; color: #e8f0f8; }
+  #tab-buttons { display: flex; gap: 6px; }
+  .tab-btn { padding: 7px 18px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-family: 'Georgia', serif; transition: background 0.2s, color 0.2s; }
+  .tab-btn.active { background: #2a1010; color: #e07070; font-weight: bold; }
+  .tab-btn.inactive { background: #121f2e; color: #7a9bb8; }
+
+  /* Learn layout */
+  #learn-view { display: flex; height: calc(100vh - 65px); }
+  #sidebar { width: 215px; background: #0a1825; border-right: 1px solid #1a3048; overflow-y: auto; flex-shrink: 0; }
+  .topic-btn { width: 100%; padding: 13px 16px; text-align: left; border: none; cursor: pointer; background: transparent; border-left: 3px solid transparent; color: #5a7a96; display: flex; gap: 8px; align-items: center; font-size: 13px; font-family: 'Georgia', serif; }
+  .topic-btn.active { background: #111e2d; color: #e0ecfa; }
+  .section-btn { width: 100%; padding: 8px 16px 8px 36px; text-align: left; border: none; cursor: pointer; background: transparent; color: #4a6a80; font-size: 12px; line-height: 1.3; font-family: 'Georgia', serif; }
+  .section-btn.active { background: #132030; }
+
+  #content-area { flex: 1; overflow-y: auto; padding: 32px 44px; }
+  #topic-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px; }
+  #section-title { font-size: 23px; color: #e8f0f8; margin-bottom: 22px; border-bottom: 1px solid #1a3048; padding-bottom: 14px; }
+  #section-body { line-height: 1.85; max-width: 740px; }
+  #nav-buttons { display: flex; gap: 12px; margin-top: 44px; }
+  .nav-btn { padding: 9px 22px; border-radius: 7px; cursor: pointer; font-size: 13px; font-family: 'Georgia', serif; }
+  .nav-btn.prev { background: #111e2d; border: 1px solid #1a3048; color: #5a7a96; }
+  .nav-btn.next { border: none; color: #fff; font-weight: bold; }
+
+  /* Flashcards */
+  #flashcard-view { display: none; flex-direction: column; align-items: center; padding: 48px 20px; }
+  #card-counter { margin-bottom: 22px; color: #4a6a80; font-size: 13px; }
+  #flashcard { width: min(620px, 94vw); min-height: 270px; border-radius: 14px; padding: 36px 34px; cursor: pointer; transition: background 0.25s, border-color 0.25s; display: flex; flex-direction: column; justify-content: center; }
+  #card-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 16px; }
+  #card-text { font-size: 16px; line-height: 1.8; }
+  #card-hint { margin-top: 22px; font-size: 12px; color: #2a4a60; }
+  #fc-buttons { display: flex; gap: 12px; margin-top: 28px; }
+  .fc-btn { padding: 9px 22px; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: 'Georgia', serif; }
+  .fc-btn.side { background: #0d1825; border: 1px solid #1a3048; color: #5a7a96; }
+  .fc-btn.flip-btn { background: #111e2d; border: 1px solid #1a3048; color: #7eb8f7; }
+  #dots { display: flex; gap: 5px; margin-top: 28px; flex-wrap: wrap; justify-content: center; max-width: 450px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; cursor: pointer; background: #1a3048; flex-shrink: 0; }
+  .dot.active { background: #c0392b; }
+
+  /* Markdown rendering */
+  .md-p { margin: 5px 0; color: #b8cfe8; line-height: 1.8; }
+  .md-li { margin-left: 20px; margin-bottom: 5px; color: #b8d8ee; display: list-item; list-style-type: disc; }
+  .md-blockquote { border-left: 3px solid #888; padding: 10px 14px; margin: 10px 0; color: #ffd180; font-style: italic; background: #0f1e2b; border-radius: 0 6px 6px 0; }
+  .md-pre { background: #0d2233; padding: 10px 14px; border-radius: 6px; margin: 10px 0; font-family: monospace; font-size: 0.87em; color: #a8d8ea; overflow-x: auto; white-space: pre-wrap; }
+  .md-table { border-collapse: collapse; margin: 14px 0; width: auto; }
+  .md-table td { border: 1px solid #1e3a50; padding: 6px 14px; font-size: 14px; }
+  .md-table tr:first-child td { color: #e0ecfa; background: #132d44; font-weight: bold; }
+  .md-table tr:not(:first-child) td { color: #8bbcd8; background: transparent; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div id="header">
+  <div id="header-text">
+    <div id="lecture-label">Brain Modelling -  Lecture 03</div>
+    <div id="lecture-title">Neural Encoding: Spike Trains, Firing Rates &amp; Tuning Curves</div>
+  </div>
+  <div id="tab-buttons">
+    <button class="tab-btn active" onclick="switchTab('learn')">📖 Study</button>
+    <button class="tab-btn inactive" onclick="switchTab('flashcards')">🃏 Flashcards</button>
+  </div>
+</div>
+
+<!-- Learn View -->
+<div id="learn-view">
+  <div id="sidebar"></div>
+  <div id="content-area">
+    <div id="topic-label"></div>
+    <h1 id="section-title"></h1>
+    <div id="section-body"></div>
+    <div id="nav-buttons"></div>
+  </div>
+</div>
+
+<!-- Flashcard View -->
+<div id="flashcard-view">
+  <div id="card-counter"></div>
+  <div id="flashcard" onclick="flipCard()">
+    <div id="card-label"></div>
+    <div id="card-text"></div>
+    <div id="card-hint">tap to reveal answer</div>
+  </div>
+  <div id="fc-buttons">
+    <button class="fc-btn side" onclick="prevCard()">← Prev</button>
+    <button class="fc-btn flip-btn" onclick="flipCard()">Flip</button>
+    <button class="fc-btn side" onclick="nextCard()">Next →</button>
+  </div>
+  <div id="dots"></div>
+</div>
+
+<script>
+const topics = [
+  {
+    id: "neural_encoding",
+    label: "Neural Encoding & Decoding",
+    color: "#c0392b",
+    icon: "📡",
+    sections: [
+      {
+        title: "Neural Encoding & Decoding: Overview",
+        content: `Neurons represent and transmit information by firing sequences of **spikes** in various temporal patterns.
+
+**Neural encoding**:
+- The map from **stimulus → response**
+- Measuring and characterizing how stimulus attributes (light, sound intensity, arm movement direction) are **represented by action potentials**
+- Topics covered: firing rates, how firing rate is extracted from data, tuning curves, selectivity to dynamic stimuli, stochastic spike models, population coding, rate vs. temporal coding
+
+**Neural decoding**:
+- The **reverse map**: response → stimulus
+- The challenge is to **reconstruct a stimulus** (or aspects of it) from the spike sequences it evokes
+
+> ⚠️ Encoding asks "how does the brain represent the world?"; decoding asks "what does the brain's activity tell us about the world?"`
+      },
+      {
+        title: "Neurons & Ion Channels: Recap",
+        content: `Three major neuron types are distinguished by their morphology:
+
+- *Cortical pyramidal cell* — long apical and basal dendrites, prominent axon collaterals
+- *Purkinje cell of the cerebellum* — extremely elaborate dendritic tree
+- *Stellate cell of the cerebral cortex* — star-shaped dendritic branching
+
+**Ion channels and resting potential**:
+
+| Ion | Effect on membrane |
+|---|---|
+| Na⁺ | Tends to **depolarize** (inside more positive) |
+| K⁺ | Tends to **hyperpolarize** (inside more negative) |
+| Cl⁻ | Tends to **hyperpolarize** (inside more negative) |
+| Ca²⁺ | Flows in during action potential at axon terminals |
+
+Under resting conditions the cell membrane is approximately **−70 mV** relative to the surrounding bath. **Ion pumps** in the membrane maintain these concentration gradients.
+
+**Key signal propagation facts**:
+- Subthreshold potential fluctuations are **severely attenuated** over distances of 1 mm or less
+- Action potentials are **regenerated actively** along axon processes → travel rapidly over large distances without attenuation
+- Synapses can be **excitatory or inhibitory**; the neurotransmitter binds on dendritic spines, dendrites, axon, or soma`
+      },
+      {
+        title: "Recording Neuronal Responses",
+        content: `Two main electrical recording methods exist, with different trade-offs:
+
+**Intracellular recording** (mainly for *in vitro*):
+- A hollow glass electrode filled with conducting electrolyte is connected to the neuron
+- Membrane potential is compared with a reference electrode in the extracellular medium
+- Reveals subthreshold membrane potential waveforms at the soma
+- Intracellular **axon** recordings are technically difficult
+- The subthreshold waveform is **completely absent** on the axon recording due to attenuation
+
+**Extracellular recording** (mainly for *in vivo*):
+- An electrode is placed **near** a neuron but does not penetrate the membrane
+- Records only action potentials (spikes), not subthreshold activity
+- Amplitude ~0.1 mV (much smaller than intracellular ~15 mV)
+- Used most commonly in awake, behaving animals
+
+**Optical recordings** also exist as a third alternative.
+
+> ⚠️ The choice of recording method constrains what you can observe: intracellular reveals subthreshold dynamics; extracellular sees only spikes.`
+      }
+    ]
+  },
+  {
+    id: "firing_rates",
+    label: "Spike Trains & Firing Rates",
+    color: "#2980b9",
+    icon: "⚡",
+    sections: [
+      {
+        title: "Spike Trains: Mathematical Representation",
+        content: `**Action potentials** are typically treated as **identical, stereotyped events** — what matters is *when* they occur, not their shape.
+
+**Neural response** = a list of the times when spikes occurred (*n* spikes)
+
+The spike train is represented as a sum of **Dirac delta functions**:
+
+  ρ(t) = Σᵢ δ(t − tᵢ)
+
+where *tᵢ* are the times of the *n* spikes. This converts the spike train into a continuous mathematical object.
+
+**Three types of firing rate**:
+
+| Measure | Formula | Description |
+|---|---|---|
+| Spike-count rate | r = n/T | Time average over trial duration |
+| Time-dependent firing rate | r(t) = (1/Δt) ∫ ⟨ρ(τ)⟩ dτ | Trial-averaged, binned |
+| Average firing rate | ⟨r⟩ = ⟨n⟩/T | Trial and time average |
+
+**Why multiple trials?** For small Δt (high temporal resolution), spike count per bin is 0 or 1 → must average across many repeated trials. **Trial-to-trial variability** means we work with firing rates rather than specific spike sequences.`
+      },
+      {
+        title: "Measuring Firing Rates: Window Functions",
+        content: `**Problem with fixed bins**: counting spikes in pre-assigned bins produces an estimate that depends on *both bin size and bin placement*.
+
+**Solution**: slide a single window *w* of duration Δt along the spike train:
+
+  r_approx(t) = Σᵢ w(t − tᵢ) = ∫ w(τ) ρ(t − τ) dτ
+
+where *w* is the **filter kernel** (how ρ evaluated at time t−τ contributes to the firing rate at time t).
+
+**Properties of binned (rectangular window) rate**:
+- Piecewise constant function of time (~histogram)
+- Always integer multiples of 1/Δt
+- Decreasing Δt increases temporal resolution
+- Alternative: vary bin size so a fixed number of spikes falls in each bin
+
+**Four window types compared** (all with ~100 ms resolution):
+
+| Window | Shape | Notes |
+|---|---|---|
+| Rectangular (binned) | Flat top | Depends on bin placement |
+| Sliding rectangular | Flat top, sliding | Avoids placement issue; rates correlated within one bin width |
+| Gaussian | Smooth bell curve | Symmetric; uses spikes before AND after t |
+| α-function (causal) | One-sided decay | Uses only past spikes; peaks *later* than symmetric windows |
+
+> ⚠️ Rates at times separated by less than one bin width are correlated because they share some of the same spikes.`
+      },
+      {
+        title: "Window Functions: Formulas",
+        content: `**Gaussian window function** (continuous, symmetric):
+
+  w(τ) = (1/√(2πσ_w)) · exp(−τ²/(2σ_w²))
+
+- σ_w controls temporal resolution (analogous to Δt)
+- Uses spikes both before AND after time t → **non-causal**
+
+**α-function window** (causal — biologically realistic):
+
+  w(τ) = [α² τ exp(−ατ)]₊
+
+where [z]₊ = z if z ≥ 0, 0 otherwise (half-wave rectification)
+
+- 1/α determines the temporal resolution
+- Vanishes for negative argument → only **past** spikes contribute
+- A postsynaptic neuron monitoring a presynaptic cell has access only to spikes that have *previously* occurred → the α-function is biologically more realistic
+- Tends to peak **later** than temporally symmetric window functions
+
+**Key requirement for any valid window**: its time integral must equal 1.
+
+  ∫ w(τ) dτ = 1`
+      }
+    ]
+  },
+  {
+    id: "tuning_curves",
+    label: "Tuning Curves & Stimulus Response",
+    color: "#8e44ad",
+    icon: "📈",
+    sections: [
+      {
+        title: "Response Tuning Curves",
+        content: `**Tuning curve**: the average firing rate as a function of a static stimulus parameter *s*:
+
+  ⟨r⟩ = f(s)
+
+Neuronal responses typically depend on many different **properties/attributes** of a stimulus.
+
+**Gaussian tuning curve** (e.g. orientation selectivity in V1):
+
+  f(s) = r_max · exp(−½ · ((s − s_max)/σ_f)²)
+
+- *s* = orientation angle of the light bar
+- *s_max* = **preferred orientation** — the angle evoking maximum response r_max
+- σ_f = determines the **width** of the tuning curve
+- Recorded via extracellular recordings of a V1 neuron in a monkey while moving a bar of light at different angles
+
+**Cosine tuning curve** (e.g. arm-movement direction in motor cortex):
+
+  f(s) = r₀ + (r_max − r₀) cos(s − s_max)
+
+- r₀ = background (offset) firing rate
+- f_min (when cos = −1) = 2r₀ − r_max
+- To ensure non-negative rates: f(s) = [r₀ + (r_max − r₀)cos(s − s_max)]₊
+- Example parameters: r_max = 54.69 Hz, r₀ = 32.34 Hz, s_max = 161.25°
+
+> ⚠️ Response tuning curves can characterize selectivities of neurons in visual, motor, and other sensory areas to a variety of stimulus properties.`
+      },
+      {
+        title: "Sigmoidal Tuning & Dynamic Range",
+        content: `**Sigmoidal (logistic) tuning curve** (e.g. binocular disparity in cat V1):
+
+  f(s) = r_max / (1 + exp((s₁/₂ − s)/Δs))
+
+- s₁/₂ = disparity producing a firing rate half of r_max
+- Δs = controls how quickly the firing rate increases with s
+- If Δs is **negative** → monotonically *decreasing* function of s
+- Example parameters: r_max = 36.03 Hz, s₁/₂ = 0.036°, Δs = 0.029°
+
+**Dynamic range — s(t)**:
+
+Neurons must encode stimulus parameters that vary over an **enormous dynamic range** (e.g. photoreceptors can respond to a single photon or to millions per second).
+
+- Neurons often respond most strongly to **rapid changes** and are relatively insensitive to steady-state levels
+- *"Just noticeable" difference* Δs: how different two stimuli must be to be reliably discriminated; Δs/s = constant (Weber's law) → noticeable differences set the perceptual scale
+
+**Adjusting to the mean stimulus level**:
+- Responses represent **fluctuations about a mean** stimulus level
+- Time-average of s(t) over trial duration T equals 0: ∫₀ᵀ s(t)/T dt = 0
+- This average can be computed over repeated trials of the same stimulus, or over different stimuli`
+      },
+      {
+        title: "Spike-Count Variability",
+        content: `**Tuning curves predict the *average* firing rate** — they do not describe how the spike-count firing rate *r* varies about its mean ⟨r⟩ = f(s) from trial to trial.
+
+**Key distinction**:
+- The map from stimulus to *average* response may be described deterministically
+- Single-trial responses *r* are drawn from a **probability distribution** with mean f(s)
+- Trial-to-trial deviation of *r* from f(s) is considered **noise**
+
+**Two noise models**:
+
+| Noise type | Standard deviation | Depends on f(s)? |
+|---|---|---|
+| Additive noise | Constant | No |
+| Multiplicative noise | Proportional to f(s) | Yes |
+
+**Stochastic spike generator**:
+- Takes a deterministic estimate of firing rate r_est(t)
+- Produces a **stochastic spiking pattern** from it
+- Generates variable numbers and patterns of action potentials, even if the same r_est(t) is used on each trial
+- Captures trial-to-trial variability without changing the underlying rate estimate`
+      },
+      {
+        title: "Spike-Triggered Average Stimulus",
+        content: `**Question**: given the spikes, what stimulus features drove the neuron?
+
+**Spike-triggered average (STA)**, C(τ): the average value of the stimulus in a time interval τ *before* a spike is fired (at time tᵢ):
+
+  C(τ) = ⟨(1/n) Σᵢ s(tᵢ − τ)⟩ ≈ (1/⟨n⟩) ⟨Σᵢ s(tᵢ − τ)⟩
+
+- Average is taken over trials
+- If *n* is large, the total spike count per trial ≈ average number of spikes per trial (n ≈ ⟨n⟩)
+- Response is typically affected only by the stimulus in a window **a few hundred milliseconds** immediately preceding a spike
+- C(τ) → 0 for τ values larger than the correlation time between stimulus and response
+
+**Procedure**: record stimuli for a finite time period around each spike, sum them, repeat over multiple trials.
+
+**Connection to correlation functions**:
+
+  C(τ) = (1/⟨n⟩) ∫ r(t)s(t − τ) dt = (1/⟨r⟩) Q_rs(−τ)
+
+where Q_rs(τ) is the **reverse correlation function** (correlation of firing rate with the stimulus at preceding times), and ⟨r⟩ = ⟨n⟩/T is the average firing rate over trials.
+
+> ⚠️ The STA tells us what stimulus features, on average, preceded a spike — it is a powerful tool for characterizing the stimulus preference of a neuron.`
+      }
+    ]
+  },
+  {
+    id: "spike_statistics",
+    label: "Spike-Train Statistics",
+    color: "#27ae60",
+    icon: "📊",
+    sections: [
+      {
+        title: "From Deterministic to Stochastic Models",
+        content: `**Fundamental challenge**: a complete description of the stochastic stimulus–response relationship requires knowing the probabilities of *every* spike sequence the stimulus can evoke.
+
+**Mathematical setup**:
+- Spike times are **continuous variables** → probability of a spike at any *precisely specified* time is zero
+- Must ask for the probability of a spike within an interval (between t and t + Δt)
+- For small Δt: P[t] = p[t]·Δt, where p[t] is the **probability density**
+
+**Joint probability** of n spikes at specified times t₁, t₂, …, tₙ:
+
+  P[t₁, t₂, …, tₙ] = p[t₁, t₂, …, tₙ] (Δt)ⁿ
+
+where spike time i falls in [tᵢ, tᵢ + Δt].
+
+**Why statistical models?** The number of possible spike sequences is typically so large that estimating all their probabilities of occurrence is impossible → we use **point processes**.
+
+**Point process hierarchy** (by memory):
+
+| Process | Memory | Description |
+|---|---|---|
+| Poisson process | None | Events statistically independent |
+| Renewal process | Last event only | Dependence extends only to immediately preceding event |
+| General point process | Full history | Probability depends on the entire history of preceding events |`
+      },
+      {
+        title: "Homogeneous Poisson Process",
+        content: `**Homogeneous Poisson process**: firing rate is **constant over time**, r(t) = r.
+
+Every sequence of *n* spikes over a fixed time interval is generated with **equal probability**:
+
+  P[t₁, t₂, …, tₙ] = n! · Pᴛ[n] · (Δt/T)ⁿ
+
+**Derivation using M bins** of size Δt = T/M:
+- Probability of a spike in one specific bin: r·Δt
+- Probability of *n* spikes in a specified set of M bins: (r·Δt)ⁿ
+- Probability of no spike in remaining M−n bins: (1 − r·Δt)^(M−n)
+- Combinatorial factor (ways to put n spikes in M bins): M!/(M−n)!n!
+
+**Result** (Δt→0, M→∞, n fixed): **Poisson distribution**:
+
+  Pᴛ[n] = (rT)ⁿ / n! · exp(−rT)
+
+**Properties**:
+- For large rT (≥10), the Poisson distribution approaches a **Gaussian** with mean and variance both equal to rT
+- Larger n values are more likely for large T
+
+> ⚠️ In the Poisson process, the firing rate r(t) is all we need — knowing when spikes occur tells us nothing about when the *next* spike will occur.`
+      },
+      {
+        title: "Fano Factor & Interspike Intervals",
+        content: `**Fano Factor (F)**: measures the dispersion of a counting process.
+
+  F = σ²ₙ / ⟨n⟩  (variance divided by mean of spike count)
+
+**For a Poisson process**: σ²ₙ = ⟨n²⟩ − ⟨n⟩² = rT → **F = 1**, independent of time interval T.
+
+**Interspike interval (ISI) distribution** for a homogeneous Poisson process:
+
+- Probability of no spike for period τ: exp(−rτ)
+- Probability density of ISIs: **p(τ) = r·exp(−rτ)** (exponential distribution)
+- Short ISIs are most likely; long ISIs fall off exponentially
+
+**Key statistics**:
+
+| Quantity | Formula | Value (Poisson) |
+|---|---|---|
+| Mean ISI | ⟨τ⟩ = ∫ τ r exp(−rτ) dτ | 1/r |
+| Variance of ISI | σ²τ = ∫ τ² r exp(−rτ) dτ − ⟨τ⟩² | 1/r² |
+| Coefficient of variation | Cᵥ = σ_τ / ⟨τ⟩ | **1** |
+
+**Experimental validation**: MT neuron data shows variance ∝ mean (consistent with F ≈ 1), and ISI histograms are approximately exponential for intervals > 10 ms. For shorter intervals, a **refractory period** (mean 5 ms, std 2 ms) is needed to fit the data.`
+      },
+      {
+        title: "Spike-Train Models with Memory",
+        content: `**Does the Poisson model fully capture neural variability?** Only partially — the Poisson model captures some basic properties, but **bursting and adaptation** require more complex models.
+
+**Biophysical features the Poisson process cannot capture**:
+- *Bursting*: a short ISI is more probable after a short ISI
+- *Adaptation*: a long ISI is more probable after a short ISI
+
+**Spike train models with memory**:
+
+| Model | Description |
+|---|---|
+| Renewal process | Dependence on last ISI only; can show refractory period effect |
+| Processes with N-ISI memory | p[τₙ | τₙ₋₁, τₙ₋₂, …, τ₁] |
+| Hidden Markov process | Neuron occupies one of N states; states have different ISI distributions and transition probabilities |
+| Processes with adaptation | Firing history modulates threshold |
+| Doubly stochastic processes | The rate itself is a stochastic variable |
+
+**Distribution fitting validation** — parameters to consider:
+- Fano factor (F = σ²/⟨n⟩)
+- Coefficient of variation (Cᵥ = σ_τ/⟨τ⟩)
+- Interspike interval distribution shape
+
+> ⚠️ In vivo: response variability is **higher in anesthetized** than in alert animals.`
+      },
+      {
+        title: "Inhomogeneous Poisson & Spike Generator",
+        content: `**Inhomogeneous Poisson process**: the firing rate is **time-dependent**, r(t), but spikes are still generated **independently**.
+
+- The spike probability in [t, t+Δt] is r(t)·Δt
+- Captures time-varying stimuli while retaining the Poisson independence assumption
+
+**Poisson Spike Generator — implementation algorithm**:
+
+At each time step Δt:
+1. Draw a random number x_rand uniformly in [0, 1]
+2. If **r(t)·Δt > x_rand** → fire a spike; otherwise do not
+
+**Alternative for constant rate** (faster):
+- Compute spike times iteratively by generating ISIs from an exponential distribution
+
+**Practical use**:
+- The estimated firing rate r_est(t) is determined from the **response tuning curve** f(s)
+- The Poisson process generates an **irregular firing pattern** that reflects the underlying rate but varies from trial to trial
+- This is the standard way to simulate neural responses from known tuning curves
+
+**Homogeneous vs. Inhomogeneous**:
+
+| Property | Homogeneous | Inhomogeneous |
+|---|---|---|
+| Rate | Constant r | Time-varying r(t) |
+| ISI distribution | Exponential | Not exponential |
+| Fano factor | 1 | Depends on r(t) |`
+      }
+    ]
+  },
+  {
+    id: "neural_code",
+    label: "Neural Code & Population Coding",
+    color: "#e67e22",
+    icon: "🌐",
+    sections: [
+      {
+        title: "Rate Coding vs. Temporal Coding",
+        content: `**Rate coding**: information is carried by the **average firing rate** over some time window.
+- If r(t) varies **slowly** with time → typically called a rate code
+- Stimulus intensity is encoded in the *number* of spikes per unit time
+
+**Temporal coding**: information is carried by the **precise timing** of individual spikes.
+- If r(t) varies **rapidly** → typically called temporal coding
+- The boundary is not clear-cut
+
+**Alternative definition** (stimulus-based):
+- A temporal code is one in which information is carried by spike timing details on a scale **shorter** than the fastest time characterizing stimulus variations
+- Uses the stimulus, not the response, to define what counts as "temporal"
+
+**Key result**: information is likely carried by **both** individual spikes and spike-timing correlations.
+
+**Correlation code within a single neuron**:
+- Significant information could be carried by interspike intervals
+- But this is **rarely more than 10%** of the information carried by spikes considered independently
+- → supports **independent-spike coding** as the dominant scheme`
+      },
+      {
+        title: "Population Coding",
+        content: `Information is typically encoded by **neuronal populations** — not single neurons alone.
+
+**Independent-neuron hypothesis**:
+- Spike trains of different neurons combined into an ensemble code
+- Correlations between neurons are *not* taken into account
+- Individual neuron tuning curves provide the basis
+
+**Coding beyond individual neurons**:
+
+| Mechanism | Description |
+|---|---|
+| Individual neuron code | Each neuron's firing rate encodes a stimulus feature |
+| Synchronous firing | Correlated activity across neurons carries extra information |
+| Rhythmic oscillations | Spike timing relative to population rhythm adds information |
+
+**Place-cell example (hippocampus)**:
+- Place cells fire when a rat occupies a specific spatial location
+- Firing pattern has a **theta rhythm** (7–12 Hz)
+- The spiking time of an individual place cell *relative to the phase* of the population theta rhythm carries additional spatial information beyond what individual place cells provide alone
+- The total extra information from correlations with theta rhythm has not been fully quantified
+
+> ⚠️ The debate between rate coding and temporal coding remains active. Both likely coexist at different stages of neural processing.`
+      },
+      {
+        title: "Lecture 3 Summary",
+        content: `**Key concepts from Lecture 3 — Neural Encoding**:
+
+**Spike representation**:
+- Neural response = sequence of δ functions: ρ(t) = Σᵢ δ(t − tᵢ)
+
+**Firing rates**:
+- Time-dependent: r(t), Spike-count: r = n/T, Average: ⟨r⟩
+
+**Extracting firing rate from data**:
+- Linear filter with kernel *w* acting as a sliding window function
+- Rectangular, Gaussian, and α-function kernels
+
+**Tuning curves** (average rate as function of static stimulus):
+- Gaussian: visual orientation selectivity in V1
+- Cosine: arm-movement direction in motor cortex
+- Sigmoidal: binocular disparity in V1
+
+**Selectivity to dynamic stimuli**:
+- Spike-triggered average stimulus C(τ) = reverse correlation function
+
+**Stochastic spike sequence models**:
+- Homogeneous Poisson process → Poisson distribution, F=1, Cᵥ=1
+- Inhomogeneous Poisson process → time-varying r(t)
+- Fano factor, ISI histogram, coefficient of variation for validation
+
+**Population coding**:
+- Individual neurons + correlations (synchrony, oscillations)
+
+**Rate vs. temporal coding**:
+- Rate: slow r(t) variations; temporal: rapid r(t) variations or spike timing finer than stimulus timescale`
+      }
+    ]
+  }
+];
+
+const flashcards = [
+  { q: "What is the difference between neural encoding and neural decoding?", a: "Encoding is the map from stimulus → response: how stimuli are represented by action potentials. Decoding is the reverse map: reconstructing the stimulus from the spike sequences it evokes." },
+  { q: "How is a spike train represented mathematically?", a: "As a sum of Dirac delta functions: ρ(t) = Σᵢ δ(t − tᵢ), where tᵢ are the spike times. This represents each spike as a unit impulse at the moment it occurs." },
+  { q: "What are the three types of firing rate and how do they differ?", a: "Spike-count rate r = n/T: time average over trial duration. Time-dependent firing rate r(t): trial-averaged response in a sliding window of size Δt. Average firing rate ⟨r⟩ = ⟨n⟩/T: both trial-averaged and time-averaged." },
+  { q: "Why must we use multiple trials to estimate a time-dependent firing rate?", a: "For small Δt (high temporal resolution), spike count in any given bin will be 0 or 1. Averaging over multiple trials is needed to get a reliable estimate that captures the underlying firing probability." },
+  { q: "What is a filter kernel / window function and what does it do?", a: "It is a function w(τ) used to compute the approximate firing rate: r_approx(t) = ∫ w(τ)ρ(t−τ)dτ. It defines how spikes at time t−τ contribute to the estimated rate at time t. Its integral must equal 1." },
+  { q: "What is the key biological difference between the Gaussian and α-function window?", a: "The Gaussian uses spikes both before AND after time t (non-causal). The α-function is causal — it vanishes for negative arguments and uses only past spikes. A postsynaptic neuron can only react to spikes that have already occurred, making the α-function more biologically realistic." },
+  { q: "What is a tuning curve and give three examples of tuning curve shapes?", a: "A tuning curve is the average firing rate as a function of a static stimulus parameter: ⟨r⟩ = f(s). Examples: (1) Gaussian — orientation selectivity in V1. (2) Cosine — arm movement direction in motor cortex. (3) Sigmoidal — binocular disparity in cat V1." },
+  { q: "What do the parameters r_max, s_max, and σ_f represent in a Gaussian tuning curve?", a: "r_max = maximum average firing rate. s_max = preferred stimulus (the value that evokes the maximum response). σ_f = width of the tuning curve, determining how broadly the neuron responds around its preferred stimulus." },
+  { q: "What is the spike-triggered average stimulus C(τ) and what does it reveal?", a: "C(τ) = average value of the stimulus in a time window τ before each spike. It reveals what stimulus feature, on average, preceded spikes — characterizing the stimulus preference of a neuron. C(τ) is also equal to (1/⟨r⟩)Q_rs(−τ), the reverse correlation function." },
+  { q: "What are the three types of point processes ordered by memory?", a: "Poisson process: no memory — spikes are statistically independent. Renewal process: memory for only the immediately preceding event/spike. General point process: probability depends on the full history of preceding events." },
+  { q: "Derive the Poisson distribution for neural spike counts.", a: "Divide trial T into M bins (Δt=T/M). P(spike in one bin) = rΔt. P(n spikes in n specific bins) = (rΔt)^n. P(no spike in M−n bins) = (1−rΔt)^(M−n). Combinatorial factor = M!/(M−n)!n!. As Δt→0: M!/[(M−n)!] ≈ M^n = (T/Δt)^n and (1−rΔt)^M → exp(−rT). Result: P_T[n] = (rT)^n/n! · exp(−rT)." },
+  { q: "What are the Fano factor and coefficient of variation, and what are their values for a homogeneous Poisson process?", a: "Fano factor F = σ²_n/⟨n⟩ (variance/mean of spike count) = 1 for Poisson, independent of T. Coefficient of variation Cᵥ = σ_τ/⟨τ⟩ (std/mean of ISIs) = 1 for Poisson (ISIs are exponentially distributed)." },
+  { q: "What is the interspike interval distribution for a homogeneous Poisson process?", a: "The probability density of ISIs is p(τ) = r·exp(−rτ) — an exponential distribution. Short ISIs are most likely; probability decays exponentially with interval duration. Mean ISI = 1/r, variance = 1/r²." },
+  { q: "How does the inhomogeneous Poisson process differ from the homogeneous one?", a: "Inhomogeneous: firing rate is time-dependent r(t). Spikes are still generated independently (no memory). The spike probability in [t, t+Δt] is r(t)·Δt. ISIs are no longer exponentially distributed and the Fano factor depends on r(t)." },
+  { q: "Describe the Poisson spike generator algorithm.", a: "At each time step Δt: (1) draw a random number x_rand uniformly in [0,1]. (2) If r(t)·Δt > x_rand → fire a spike. Otherwise, do not. The firing rate r(t) is typically determined from the response tuning curve f(s)." },
+  { q: "What is the distinction between rate coding and temporal coding?", a: "Rate coding: information encoded in the average firing rate over time (slow r(t) variations). Temporal coding: information encoded in precise spike timing (rapid r(t) variations or spike timing finer than the fastest stimulus timescale). The boundary is not sharp. Interspike interval correlations carry at most ~10% extra information over rate codes." },
+  { q: "What is the 'just noticeable difference' (Δs) and why is it important?", a: "Δs is the minimum difference in stimulus intensity that can be reliably discriminated. It is proportional to stimulus magnitude s (Weber's law: Δs/s = constant). These noticeable differences set the scale for perceived stimulus intensities and explain why neural responses adapt to the mean stimulus level." },
+  { q: "What is spike-train variability and why does the standard Poisson model fall short?", a: "Even with identical stimuli, spike counts and spike timing vary across trials (trial-to-trial variability). The Poisson model captures some variability (F≈1 in MT neurons, near-exponential ISI histograms), but fails to account for bursting (short ISI after short ISI) and adaptation (long ISI after short ISI) — which require spike train models with memory." }
+];
+
+// State
+let activeTab = 'learn';
+let activeTopic = topics[0].id;
+let activeSection = 0;
+let cardIndex = 0;
+let flipped = false;
+
+function getCurrentTopic() { return topics.find(t => t.id === activeTopic); }
+function getCurrentSection() { return getCurrentTopic()?.sections[activeSection]; }
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.className = 'tab-btn ' + (['learn','flashcards'][i] === tab ? 'active' : 'inactive');
+  });
+  document.getElementById('learn-view').style.display = tab === 'learn' ? 'flex' : 'none';
+  document.getElementById('flashcard-view').style.display = tab === 'flashcards' ? 'flex' : 'none';
+  if (tab === 'flashcards') renderFlashcard();
+}
+
+function renderSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.innerHTML = '';
+  topics.forEach(topic => {
+    const btn = document.createElement('button');
+    btn.className = 'topic-btn' + (activeTopic === topic.id ? ' active' : '');
+    btn.style.borderLeftColor = activeTopic === topic.id ? topic.color : 'transparent';
+    btn.innerHTML = `<span>${topic.icon}</span><span style="flex:1;line-height:1.3">${topic.label}</span>`;
+    btn.onclick = () => { activeTopic = topic.id; activeSection = 0; renderSidebar(); renderContent(); };
+    sidebar.appendChild(btn);
+
+    if (activeTopic === topic.id) {
+      topic.sections.forEach((s, i) => {
+        const sb = document.createElement('button');
+        sb.className = 'section-btn' + (activeSection === i ? ' active' : '');
+        sb.style.color = activeSection === i ? topic.color : '#4a6a80';
+        sb.textContent = s.title;
+        sb.onclick = () => { activeSection = i; renderSidebar(); renderContent(); };
+        sidebar.appendChild(sb);
+      });
+    }
+  });
+}
+
+function renderMarkdown(text, topicColor) {
+  const lines = text.split('\n');
+  let html = '';
+  let inTable = false;
+  let tableRows = [];
+
+  function flushTable() {
+    if (tableRows.length > 0) {
+      html += '<table class="md-table">';
+      tableRows.forEach((row, ri) => {
+        html += '<tr>' + row.map(cell => `<td>${cell}</td>`).join('') + '</tr>';
+      });
+      html += '</table>';
+      tableRows = [];
+    }
+    inTable = false;
+  }
+
+  lines.forEach(line => {
+    if (line.startsWith('|')) {
+      inTable = true;
+      const cells = line.split('|').map(c => c.trim()).filter(Boolean);
+      if (!cells.every(c => /^-+$/.test(c))) tableRows.push(cells);
+      return;
+    }
+    if (inTable) flushTable();
+
+    line = line
+      .replace(/\*\*(.*?)\*\*/g, "<strong style='color:#cce6ff'>$1</strong>")
+      .replace(/\*(.*?)\*/g, "<em style='color:#9ac5e8'>$1</em>")
+      .replace(/`(.*?)`/g, "<code style='background:#0d2233;padding:2px 6px;border-radius:3px;font-family:monospace;font-size:0.87em;color:#a8d8ea'>$1</code>");
+
+    if (line.startsWith('> ⚠️') || line.startsWith('>')) {
+      html += `<blockquote class="md-blockquote" style="border-left-color:${topicColor}">${line.replace(/^>\s?/, '')}</blockquote>`;
+    } else if (line.startsWith('- ') || line.startsWith('• ')) {
+      html += `<li class="md-li">${line.slice(2)}</li>`;
+    } else if (/^\d+\.\s/.test(line)) {
+      html += `<li class="md-li" style="list-style-type:decimal">${line.replace(/^\d+\.\s/, '')}</li>`;
+    } else if (line.trim() === '') {
+      html += '<br>';
+    } else if (/^\s{2,}/.test(line) || line.match(/^[a-zA-Z_\s]+=\s/)) {
+      html += `<div class="md-pre">${line}</div>`;
+    } else {
+      html += `<p class="md-p">${line}</p>`;
+    }
+  });
+  if (inTable) flushTable();
+  return html;
+}
+
+function renderContent() {
+  const topic = getCurrentTopic();
+  const section = getCurrentSection();
+  if (!topic || !section) return;
+
+  document.getElementById('topic-label').innerHTML = `<span style="color:${topic.color}">${topic.icon} ${topic.label}</span>`;
+  document.getElementById('section-title').textContent = section.title;
+  document.getElementById('section-body').innerHTML = renderMarkdown(section.content, topic.color);
+
+  const nav = document.getElementById('nav-buttons');
+  nav.innerHTML = '';
+  if (activeSection > 0) {
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'nav-btn prev';
+    prevBtn.textContent = '← Previous';
+    prevBtn.onclick = () => { activeSection--; renderSidebar(); renderContent(); };
+    nav.appendChild(prevBtn);
+  }
+  if (activeSection < topic.sections.length - 1) {
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'nav-btn next';
+    nextBtn.style.background = topic.color;
+    nextBtn.textContent = 'Next →';
+    nextBtn.onclick = () => { activeSection++; renderSidebar(); renderContent(); };
+    nav.appendChild(nextBtn);
+  } else {
+    const idx = topics.findIndex(t => t.id === activeTopic);
+    if (idx < topics.length - 1) {
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'nav-btn next';
+      nextBtn.style.background = topic.color;
+      nextBtn.textContent = 'Next topic →';
+      nextBtn.onclick = () => { activeTopic = topics[idx+1].id; activeSection = 0; renderSidebar(); renderContent(); };
+      nav.appendChild(nextBtn);
+    }
+  }
+}
+
+function renderFlashcard() {
+  const card = flashcards[cardIndex];
+  document.getElementById('card-counter').textContent = `Card ${cardIndex + 1} of ${flashcards.length}`;
+  const fc = document.getElementById('flashcard');
+  fc.style.background = flipped ? '#0d1e14' : '#0d1825';
+  fc.style.border = `1px solid ${flipped ? '#1e5c34' : '#1a3048'}`;
+  document.getElementById('card-label').style.color = flipped ? '#27ae60' : '#c0392b';
+  document.getElementById('card-label').textContent = flipped ? '✓ Answer' : '? Question';
+  document.getElementById('card-text').style.color = flipped ? '#8fe0b0' : '#cdd9e5';
+  document.getElementById('card-text').textContent = flipped ? card.a : card.q;
+  document.getElementById('card-hint').style.display = flipped ? 'none' : 'block';
+
+  const dots = document.getElementById('dots');
+  dots.innerHTML = '';
+  flashcards.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === cardIndex ? ' active' : '');
+    d.onclick = () => { cardIndex = i; flipped = false; renderFlashcard(); };
+    dots.appendChild(d);
+  });
+}
+
+function flipCard() { flipped = !flipped; renderFlashcard(); }
+function prevCard() { cardIndex = (cardIndex - 1 + flashcards.length) % flashcards.length; flipped = false; renderFlashcard(); }
+function nextCard() { cardIndex = (cardIndex + 1) % flashcards.length; flipped = false; renderFlashcard(); }
+
+// Init
+renderSidebar();
+renderContent();
+</script>
+</body>
+</html>

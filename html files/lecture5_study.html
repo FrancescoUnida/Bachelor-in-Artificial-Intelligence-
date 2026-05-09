@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Brain Modelling - Lecture 5 — Neural Decoding</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #08111a; color: #cdd9e5; font-family: 'Georgia', serif; font-size: 15px; min-height: 100vh; }
+  button { font-family: 'Georgia', serif; cursor: pointer; }
+  table { border-collapse: collapse; margin: 14px 0; }
+  td { border: 1px solid #1e3a50; padding: 6px 14px; font-size: 14px; }
+  code { background: #0d2233; padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 0.87em; color: #a8d8ea; }
+  li { margin-left: 20px; margin-bottom: 5px; color: #b8d8ee; }
+  blockquote { border-left: 3px solid #888; padding: 10px 14px; margin: 10px 0; color: #ffd180; font-style: italic; background: #0f1e2b; border-radius: 0 6px 6px 0; }
+  p { margin: 5px 0; color: #b8cfe8; line-height: 1.8; }
+  strong { color: #cce6ff; }
+  em { color: #9ac5e8; }
+
+  /* Layout */
+  #header { background: #0d1d2e; border-bottom: 1px solid #1a3048; padding: 16px 28px; display: flex; align-items: center; gap: 16px; }
+  #header-left { flex: 1; }
+  #header-subtitle { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: #1a6b9a; margin-bottom: 3px; }
+  #header-title { font-size: 20px; font-weight: bold; color: #e8f0f8; }
+  #header-tabs { display: flex; gap: 6px; }
+  .tab-btn { padding: 7px 18px; border-radius: 6px; border: none; font-size: 13px; transition: background 0.2s, color 0.2s; }
+  .tab-btn.active { background: #0a1e30; color: #5cb3e0; font-weight: bold; }
+  .tab-btn.inactive { background: #121f2e; color: #7a9bb8; }
+
+  /* Learn layout */
+  #learn-view { display: flex; height: calc(100vh - 65px); }
+  #sidebar { width: 215px; background: #0a1825; border-right: 1px solid #1a3048; overflow-y: auto; flex-shrink: 0; }
+  .topic-btn { width: 100%; padding: 13px 16px; text-align: left; border: none; background: transparent; border-left: 3px solid transparent; color: #5a7a96; display: flex; gap: 8px; align-items: center; font-size: 13px; font-family: 'Georgia', serif; transition: background 0.15s; }
+  .topic-btn.active { background: #111e2d; color: #e0ecfa; }
+  .section-btn { width: 100%; padding: 8px 16px 8px 36px; text-align: left; border: none; background: transparent; font-size: 12px; line-height: 1.3; font-family: 'Georgia', serif; transition: background 0.15s; color: #4a6a80; }
+  .section-btn.active { background: #132030; }
+  #content-area { flex: 1; overflow-y: auto; padding: 32px 44px; }
+  #topic-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px; }
+  #section-title { font-size: 23px; color: #e8f0f8; margin-bottom: 22px; border-bottom: 1px solid #1a3048; padding-bottom: 14px; }
+  #section-body { line-height: 1.85; max-width: 740px; }
+  #nav-btns { display: flex; gap: 12px; margin-top: 44px; }
+  .nav-btn-prev { padding: 9px 22px; background: #111e2d; border: 1px solid #1a3048; border-radius: 7px; color: #5a7a96; font-size: 13px; font-family: 'Georgia', serif; }
+  .nav-btn-next { padding: 9px 22px; border: none; border-radius: 7px; color: #fff; font-size: 13px; font-weight: bold; font-family: 'Georgia', serif; }
+
+  /* Flashcards */
+  #flashcard-view { display: none; flex-direction: column; align-items: center; padding: 48px 20px; }
+  #card-counter { margin-bottom: 22px; color: #4a6a80; font-size: 13px; }
+  #card-box { width: min(620px, 94vw); min-height: 270px; border-radius: 14px; padding: 36px 34px; cursor: pointer; transition: background 0.25s, border-color 0.25s; display: flex; flex-direction: column; justify-content: center; }
+  #card-box.question { background: #0d1825; border: 1px solid #1a3048; }
+  #card-box.answer { background: #0d1e14; border: 1px solid #1e5c34; }
+  #card-mode-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 16px; }
+  #card-mode-label.question { color: #1a6b9a; }
+  #card-mode-label.answer { color: #27ae60; }
+  #card-text { font-size: 16px; line-height: 1.8; }
+  #card-text.question { color: #cdd9e5; }
+  #card-text.answer { color: #8fe0b0; }
+  #card-hint { margin-top: 22px; font-size: 12px; color: #2a4a60; }
+  #card-nav { display: flex; gap: 12px; margin-top: 28px; }
+  .card-nav-btn { padding: 9px 22px; background: #0d1825; border: 1px solid #1a3048; border-radius: 8px; color: #5a7a96; font-size: 14px; font-family: 'Georgia', serif; }
+  .card-flip-btn { padding: 9px 22px; background: #111e2d; border: 1px solid #1a3048; border-radius: 8px; color: #7eb8f7; font-size: 14px; font-family: 'Georgia', serif; }
+  #card-dots { display: flex; gap: 5px; margin-top: 28px; flex-wrap: wrap; justify-content: center; max-width: 450px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; cursor: pointer; background: #1a3048; transition: background 0.2s; }
+  .dot.active { background: #1a6b9a; }
+
+  /* Math-style formula blocks */
+  .formula { font-style: italic; background: #0d2233; border: 1px solid #1e3a50; border-radius: 6px; padding: 10px 16px; margin: 10px 0; color: #a8d8ea; font-size: 14px; display: inline-block; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="header">
+  <div id="header-left">
+    <div id="header-subtitle">Brain Modelling -  Lecture 05</div>
+    <div id="header-title">Neural Decoding</div>
+  </div>
+  <div id="header-tabs">
+    <button class="tab-btn active" id="btn-learn" onclick="switchTab('learn')">📖 Study</button>
+    <button class="tab-btn inactive" id="btn-flashcards" onclick="switchTab('flashcards')">🃏 Flashcards</button>
+  </div>
+</div>
+
+<!-- LEARN VIEW -->
+<div id="learn-view">
+  <div id="sidebar"></div>
+  <div id="content-area">
+    <div id="topic-label"></div>
+    <h1 id="section-title"></h1>
+    <div id="section-body"></div>
+    <div id="nav-btns"></div>
+  </div>
+</div>
+
+<!-- FLASHCARD VIEW -->
+<div id="flashcard-view">
+  <div id="card-counter"></div>
+  <div id="card-box" class="question" onclick="flipCard()">
+    <div id="card-mode-label" class="question">? Question</div>
+    <div id="card-text" class="question"></div>
+    <div id="card-hint">tap to reveal answer</div>
+  </div>
+  <div id="card-nav">
+    <button class="card-nav-btn" onclick="changeCard(-1)">← Prev</button>
+    <button class="card-flip-btn" onclick="flipCard()">Flip</button>
+    <button class="card-nav-btn" onclick="changeCard(1)">Next →</button>
+  </div>
+  <div id="card-dots"></div>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+
+const topics = [
+  {
+    id: "decoding_intro",
+    label: "Neural Decoding: Intro",
+    color: "#1a6b9a",
+    icon: "🔍",
+    sections: [
+      {
+        title: "Encoding vs. Decoding",
+        content: `**Encoding** is the prediction of neural responses to known stimuli.
+
+**Decoding** is the opposite: estimating the information content of neuronal spike trains, i.e. inferring what is happening in the real world from neuronal spiking patterns.
+
+**Why probability theory?**
+- Neural responses, even to a single repeated stimulus, are typically described by *stochastic models* due to their inherent variability
+- Stimuli themselves are often described stochastically (statistical properties of complex environments)
+
+Decoding involves both **single neurons** and **neuronal populations**.
+
+**Discrimination** is a special case of decoding in which only a few different stimulus values are considered.
+
+A more general problem is the **extraction of a continuous stimulus parameter** from one or more neuronal responses.`
+      },
+      {
+        title: "Probability Theory: Bayes' Theorem",
+        content: `Let **r** = (r₁, r₂, …, rₙ) for N neurons be a list of spike-count firing rates.
+
+**Key probability quantities**:
+
+| Notation | Meaning |
+|---|---|
+| P[s] | Prior probability of stimulus s being presented |
+| P[r] | Probability of response r being recorded (independent of stimulus) |
+| P[r, s] | Joint probability: stimulus s presented AND response r recorded |
+| P[r\|s] | Conditional probability of response r given stimulus s was presented |
+| P[s\|r] | Conditional probability that stimulus s was presented, given response r was recorded |
+
+**Key relationships**:
+
+  P[r] = Σₛ P[r|s] P[s]
+  P[s] = Σᵣ P[s|r] P[r]
+  P[r, s] = P[r|s] P[s] = P[s|r] P[r]
+
+**Bayes' Theorem** (with P[r] ≠ 0):
+
+  P[s|r] = ( P[r|s] · P[s] ) / P[r]
+
+**Decoding** a response means determining P[s|r], which requires knowledge of the statistical properties of stimuli P[s].`
+      },
+      {
+        title: "Interpreting Bayes' Theorem in Neuroscience",
+        content: `The probability **P[s|r]** of recognizing stimulus s(t) given a specific spike train **r**:
+
+- **Increases** with P[r|s] — the probability that a specific r was caused by s(t)
+- **Increases** with P[s] — the prior probability that stimulus s(t) occurs
+- **Decreases** with P[r] — the probability that r occurs independently from s(t)
+
+> ⚠️ The Bayes theorem is a fundamental law with many applications. In this context, it defines the probability that a certain neuron recognizes a stimulus among a certain distribution of possible stimuli.
+
+**Discrete vs. continuous representations**:
+- If stimulus and response take *discrete values* → use ordinary probabilities
+- If firing rates or stimulus values are *continuous* → use probability densities`
+      }
+    ]
+  },
+  {
+    id: "single_cell",
+    label: "Single-Cell Decoding",
+    color: "#8e44ad",
+    icon: "🎯",
+    sections: [
+      {
+        title: "Discrimination: Two-Stimulus Case",
+        content: `**Discrimination** is a special form of decoding where only two stimulus values are compared.
+
+**Experiment (Britten et al., 1992)** — motion direction detection in monkeys:
+- Task: detect the movement direction of a moving *random-dot stimulus*
+- The visual image consists of randomly placed dots that jump every 45 ms
+- *0% coherence*: all dots move randomly
+- *50% coherence*: half the dots move randomly, half move together
+- *100% coherence*: all dots move in the same direction
+
+**Two types of measurements** on the monkey:
+- **Neural**: recordings from the visual cortical area *Middle-Temporal (MT)*
+- **Behavioral**: the monkey reports the motion direction in a *two-alternative forced-choice* task (preferred direction of the recorded neuron, or the opposite)
+
+**Results**:
+- Below 1% coherence → performance near chance (fraction correct = 0.5)
+- Perfect performance above 10% coherence (fraction correct = 1.0)
+- The neuron fires more spikes when motion is in its *preferred (+) direction* (hatched histogram) than in the *null (−) direction* (solid histogram)
+- At high coherence: the two firing-rate distributions are well separated; at low coherence: they merge`
+      },
+      {
+        title: "Discriminability and ROC Analysis",
+        content: `The two firing-rate distributions are approximately **Gaussian with the same variance σᵣ²** but different means ⟨r⟩₊ and ⟨r⟩₋.
+
+**Discriminability (d')**:
+
+  d' = ( ⟨r⟩₊ − ⟨r⟩₋ ) / σᵣ
+
+A threshold z is used to decide which stimulus was presented:
+- **β(z)** = P[r ≥ z | +] — hit rate ("power"): correct answer for a + stimulus
+- **α(z)** = P[r ≥ z | −] — false alarm rate ("size"): incorrect answer for a − stimulus
+
+| Stimulus | Correct | Incorrect |
+|---|---|---|
+| + | β | 1 − β |
+| − | 1 − α | α |
+
+**Threshold extremes**:
+- z = 0 → always r ≥ z → always answer "plus" → α = β = 1
+- z very large → always r < z → α = β = 0
+
+**Ideal threshold**: z such that α → 0 and β → 1`
+      },
+      {
+        title: "ROC Curves and Performance",
+        content: `The **Receiver Operating Characteristic (ROC) curve** evaluates how test performance depends on threshold z.
+
+Each curve is the locus of points (α(z), β(z)) for all z values. The values of α and β are computed from histograms.
+
+**Interpretation**:
+- *High coherence (easy task)*: the ROC curve rises rapidly → β quickly approaches 1 without much increase in α → the curve bows far into the upper-left corner
+- *Low coherence (hard task)*: the curve rises more slowly as z is lowered
+- *Impossible task (random answers)*: the curve lies along the diagonal α = β
+
+**Area under the ROC curve** ↔ level of performance on the task.
+
+**Two-alternative forced-choice** task (to remove threshold dependency):
+- Stimulus presented twice: once in the + direction, once in the − direction
+- Task: decide which presentation was + given firing rates r₁ and r₂
+- Rule: answer "trial 1" if r₁ ≥ r₂, otherwise "trial 2"
+- The value of r on one trial serves as the threshold for the other trial`
+      }
+    ]
+  },
+  {
+    id: "population_decoding",
+    label: "Population Decoding",
+    color: "#27ae60",
+    icon: "🧩",
+    sections: [
+      {
+        title: "Population Coding: Overview",
+        content: `**Population decoding** uses the responses of large numbers of neurons simultaneously.
+
+Individual neurons in such a population typically have **different but overlapping selectivities**, so that many neurons (but not necessarily all) respond to a given stimulus.
+
+**Advantages of population coding**:
+- Reduction of uncertainty due to neuronal variability
+- Ability to represent a number of different stimulus attributes simultaneously
+
+From the response of a single neuron p[r|s] we can generalize to p[**r**|s], the conditional probability density of the **population response** r.`
+      },
+      {
+        title: "Cricket Cercal System: Example",
+        content: `The **cercal system** of the cricket senses the direction of incoming air currents — a warning of approaching predators. It is a classic example of population coding with a small number of neurons.
+
+- Each cercal hair is attached to a neuron that fires when the hair is deflected
+- Thousands of primary sensory neurons send axons to a set of **interneurons**
+- Interneurons **collectively encode wind direction** as a population
+
+**Tuning curves** of the four low-velocity interneurons:
+- Described as a *half-wave rectified cosine function*:
+
+  (f(s) / rmax)ₐ = [cos(s − sₐ)]₊
+
+- Preferred directions of the four neurons are located **90° from each other**
+- rmax values are typically around **40 Hz**; wind speed was held constant
+
+**Vector representation**:
+- Wind direction: spatial vector **v** of unit length (|**v**| = 1)
+- Preferred wind direction for neuron a: vector **cₐ** of unit length
+
+  (f(s) / rmax)ₐ = [**v** · **cₐ**]₊
+
+This is the half-wave rectified projection of the wind direction vector onto the preferred-direction axis of the neuron.`
+      },
+      {
+        title: "Population Vector Decoding",
+        content: `**Population Decoding via the population vector**:
+
+If rₐ is the spike-count firing rate of neuron a, an estimate of the wind direction on any given trial can be obtained from the direction of the **population vector**:
+
+  **v**pop = Σₐ (r / rmax)ₐ **cₐ**
+
+Each neuron contributes its preferred direction vector **cₐ**, weighted by its normalized firing rate.
+
+**Application to arm movements (M1, primary motor cortex)**:
+- Thousands of M1 neurons have arm-movement-related tuning curves (related to direction, velocity, acceleration…)
+- Tuning curves of certain M1 neurons in the monkey can be described by cosine functions:
+
+  ((⟨r⟩ − r₀) / rmax)ₐ = **v** · **cₐ**
+
+- M1 neurons do *not* have orthogonal preferred directions (unlike the cricket)
+- But with all directions covered with roughly equal probability and large N:
+
+  **v**pop (averaged over trials) is approximately parallel to the arm movement direction vector **v**
+
+> ⚠️ The population vector reconstructs the actual movement direction fairly accurately — even without an orthogonal coordinate system.`
+      }
+    ]
+  },
+  {
+    id: "optimal_decoding",
+    label: "Optimal Decoding Methods",
+    color: "#c0392b",
+    icon: "⚙️",
+    sections: [
+      {
+        title: "Beyond the Vector Method",
+        content: `The **vector method** is a simple decoding method but is not always general or optimal for reconstructing a stimulus from the firing rates of a population of neurons.
+
+Two more principled methods are:
+- **Bayesian inference**
+- **Maximum a posteriori (MAP)** and **maximum likelihood (ML)** inference
+
+All these methods use the conditional probability that a stimulus parameter takes a value between s and s + Δs, given that the N encoding neurons fired at rates **r**:
+
+  p[s|r] = ( p[r|s] · p[s] ) / p[r]
+
+> ⚠️ Note: extracting p[s|r] from experimental data can be difficult.`
+      },
+      {
+        title: "Bayesian Inference",
+        content: `**Bayesian inference** is based on the minimization of a particular *loss function* L(s, s_bayes).
+
+The Bayesian estimate s_bayes is chosen to **minimize the expected loss** averaged over all stimuli for a given set of rates:
+
+  minimize: ∫ds L(s, s_bayes) p[s|r]
+
+**Squared-error loss function**:
+If L(s, s_bayes) = (s − s_bayes)², the estimate that minimizes the expected loss is:
+
+  s_bayes = ∫ds p[s|r] · s
+
+This is the **mean (expected value) of the posterior distribution** p[s|r] — the center of mass of the posterior.
+
+Different loss functions lead to different optimal estimators (e.g. median minimizes absolute error).`
+      },
+      {
+        title: "MAP and Maximum Likelihood (ML) Inference",
+        content: `**Maximum a posteriori (MAP) inference** does not involve a loss function. Instead, it simply chooses the stimulus value s_MAP that **maximizes the conditional probability density**:
+
+  s_MAP = argmax p[s|r]
+
+**Special case — uniform prior**:
+If the prior p[s] is independent of s (uniform), the MAP algorithm is equivalent to **maximizing the likelihood function** (ML inference):
+
+  s_ML = argmax p[r | s_ML]
+
+**Comparison of MAP/ML vs. Bayesian (for the cercal system)**:
+- Error is measured as root-mean-squared difference between true (s) and estimated (sₑₛₜ) wind directions
+- Both methods show periodic *dips* in the error curves
+- Dips occur at angles where one tuning curve peaks and two others rise from threshold
+- Neurons are most sensitive where their tuning curves have maximum slopes — near threshold
+
+> ⚠️ ML and Bayesian methods give similar performance when the prior is flat; they diverge when the prior is non-uniform.`
+      },
+      {
+        title: "General Case: Gaussian Tuning Curves",
+        content: `For the **more general case** of decoding an arbitrary continuous stimulus parameter, consider an array of **Gaussian tuning curves**:
+
+  f_a(s) = rmax · exp( −½ · ((s − sₐ) / σₐ)² )
+
+**Array properties**:
+- Peak values of the tuning curves fall on integer values of s (from −5 to 5)
+- All tuning curves have σₐ = 1
+- The sum of all tuning curves across the array is **approximately flat** (≈ 0.5), meaning it is approximately independent of s
+
+This property ensures that any stimulus value in the range is represented equally well by the population, making decoding feasible and approximately unbiased across the stimulus range.`
+      }
+    ]
+  },
+  {
+    id: "spike_train",
+    label: "Spike-Train Decoding",
+    color: "#e67e22",
+    icon: "📈",
+    sections: [
+      {
+        title: "From Static to Dynamic Stimuli",
+        content: `The decoding methods discussed so far estimate or discriminate **static stimulus values** on the basis of spike-count firing rates.
+
+**Problem**: spike-count firing rates do not provide sufficient information for reconstructing a **stimulus that varies during the course of a trial**.
+
+To decode a time-varying stimulus s(t), we need to construct an estimate of the stimulus at time t **from the sequence of spikes** evoked up to that time.
+
+**Summary of decoding approaches**:
+- *Discrimination between stimulus values* — single-cell, binary
+- *Decoding of static stimuli from population responses* — population vector, MAP, ML, Bayesian
+- *Decoding of dynamic stimulus parameters from spike trains* — uses spike timing, not just rate`
+      },
+      {
+        title: "The Decoding Kernel",
+        content: `**Spike-train decoding** uses a *prediction delay* τ₀ to construct an estimate of the stimulus at time t − τ₀ from spikes occurring prior to time t.
+
+The estimate uses a **decoding kernel K(τ)**:
+
+  ŝ(t − τ₀) = Σᵢ K(t − tᵢ)
+
+where the sum runs over all spike times tᵢ < t.
+
+**Two types of contributing spikes**:
+- *Spikes that could have been caused by s(t − τ₀)*: those for which t − τ₀ < tᵢ < t (e.g. spike 7)
+- *Earlier spikes* (tᵢ < t − τ₀): these occurred too early to be directly caused by s(t − τ₀), but can contribute to estimation through *stimulus correlations*
+
+> ⚠️ Increasing τ₀ makes the estimation task easier, but **delays the decoding** and makes the result less behaviorally relevant.`
+      },
+      {
+        title: "Decoding from the Fly H1 Neuron",
+        content: `A classic example of spike-train decoding: the **H1 neuron** of the fly, which encodes visual motion.
+
+**Setup**:
+- Decoding kernel with τ₀ = 40 ms
+- Two stimuli presented: s(t) and −s(t) (reverse polarity)
+
+**Results**:
+- The H1 neuron responds differently to s(t) and −s(t) — typical neuronal responses are shown as spike trains
+- The **optimal linear reconstruction** (solid line) tracks the actual stimulus (dashed line) remarkably well
+- The kernel K(τ) has a characteristic biphasic shape, peaking around 0–50 ms and having a negative lobe around 100 ms
+
+**Key insight**: even a single neuron's spike train carries substantial information about a continuously varying stimulus, when decoded with an appropriate kernel.`
+      }
+    ]
+  }
+];
+
+const flashcards = [
+  { q: "What is the difference between neural encoding and neural decoding?", a: "Encoding predicts neural responses to known stimuli. Decoding is the reverse: estimating what stimulus occurred in the real world from neuronal spiking patterns (spike trains)." },
+  { q: "State Bayes' Theorem in the context of neural decoding.", a: "P[s|r] = P[r|s] · P[s] / P[r]. The posterior probability of stimulus s given response r equals the likelihood times the prior divided by the marginal response probability. Decoding means determining P[s|r]." },
+  { q: "What does P[s|r] depend on according to Bayes' Theorem?", a: "P[s|r] increases with P[r|s] (likelihood the response was caused by that stimulus) and with P[s] (prior probability of the stimulus), and decreases with P[r] (probability that response occurs regardless of stimulus)." },
+  { q: "What is discrimination in neural decoding?", a: "Discrimination is a special case of decoding where only a few (typically two) different stimulus values are considered, e.g. distinguishing motion in the + versus − direction." },
+  { q: "What did the Britten et al. (1992) experiment measure and what were the key findings?", a: "Monkeys performed a two-alternative forced-choice motion direction task on random-dot stimuli with varying coherence. Below 1% coherence: near chance performance. Above 10%: perfect. The MT neuron fires more in its preferred (+) direction; distributions merge at low coherence and separate at high coherence." },
+  { q: "What is discriminability d' and how is it calculated?", a: "d' = (⟨r⟩₊ − ⟨r⟩₋) / σᵣ. It measures how well separated the two Gaussian firing-rate distributions are for the two stimulus directions. Larger d' means better discrimination." },
+  { q: "What is an ROC curve and what does it represent?", a: "A Receiver Operating Characteristic curve plots hit rate β(z) vs. false alarm rate α(z) as the threshold z varies. It shows how decoding performance depends on the threshold. A curve in the upper-left corner means good performance; the diagonal means random guessing." },
+  { q: "What is the area under the ROC curve related to?", a: "The area under the ROC curve is directly related to the level of performance on the two-alternative forced-choice task — it quantifies how well a neuron's responses discriminate between two stimuli, independent of any particular threshold." },
+  { q: "What are the advantages of population coding over single-neuron coding?", a: "Population coding reduces uncertainty due to neuronal variability (averaging effect) and allows simultaneous representation of multiple stimulus attributes. Many neurons with overlapping tuning curves together encode stimuli more robustly than any single neuron could." },
+  { q: "Describe the tuning curve of the cricket cercal interneurons.", a: "The four interneurons have half-wave rectified cosine tuning curves: (f(s)/rmax)ₐ = [cos(s − sₐ)]₊. Their preferred directions are 90° apart from each other. rmax ≈ 40 Hz. The tuning can be expressed as the half-wave rectified dot product of the wind direction vector v with the preferred direction vector cₐ." },
+  { q: "What is the population vector and how is it used for decoding?", a: "The population vector is v_pop = Σₐ (r/rmax)ₐ · cₐ. Each neuron contributes its preferred direction vector weighted by its normalized firing rate. The direction of v_pop estimates the stimulus direction (e.g. wind direction or arm movement direction)." },
+  { q: "How is the population vector applied to arm movements in M1?", a: "M1 neurons have cosine tuning curves for arm movement direction. Even though preferred directions are not orthogonal, with enough neurons covering all directions, the average population vector is approximately parallel to the actual arm movement direction." },
+  { q: "What is Bayesian inference in decoding and what does it minimize?", a: "Bayesian inference chooses the estimate s_bayes that minimizes the expected loss ∫ds L(s, s_bayes) p[s|r]. For squared-error loss L = (s − s_bayes)², the optimal estimate is s_bayes = ∫ds p[s|r] · s — the mean of the posterior distribution." },
+  { q: "What is MAP inference and when does it reduce to ML inference?", a: "MAP (maximum a posteriori) chooses the stimulus value that maximizes p[s|r]. When the prior p[s] is uniform (independent of s), MAP is equivalent to maximum likelihood (ML), which maximizes p[r|s_ML]." },
+  { q: "Why do dips appear in the error curves for MAP/ML decoding of the cercal system?", a: "Dips occur at angles where one tuning curve peaks and two others rise from threshold. Neurons are most sensitive (highest slope) near threshold, so the population encodes those directions most precisely, leading to lower decoding error at those angles." },
+  { q: "What is a Gaussian tuning curve array and what property ensures uniform decoding?", a: "f_a(s) = rmax · exp(−½ · ((s − sₐ)/σₐ)²). When curves are evenly spaced and overlap sufficiently, their sum is approximately flat — meaning the total population activity is approximately independent of s, ensuring any stimulus value is represented equally well." },
+  { q: "Why are spike-count firing rates insufficient for decoding time-varying stimuli?", a: "Spike-count rates summarize activity over a fixed time window and discard timing information. A stimulus that varies continuously during a trial requires the precise timing of individual spikes (spike trains) to reconstruct the time course of the stimulus." },
+  { q: "What is a decoding kernel and how does it work?", a: "A decoding kernel K(τ) convolves with the spike train to estimate the stimulus: ŝ(t − τ₀) = Σᵢ K(t − tᵢ). It uses spikes that could have been caused by the target stimulus value (within τ₀ window) and earlier spikes that contribute via stimulus correlations." },
+  { q: "What is the trade-off with increasing the prediction delay τ₀ in spike-train decoding?", a: "Increasing τ₀ makes decoding easier (more spikes available, less real-time pressure) but delays the result and makes it less behaviorally relevant. There is a trade-off between decoding accuracy and temporal immediacy." }
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let activeTab = "learn";
+let activeTopic = topics[0].id;
+let activeSection = 0;
+let cardIndex = 0;
+let flipped = false;
+
+// ─── RENDERING ───────────────────────────────────────────────────────────────
+function getCurrentTopic() { return topics.find(t => t.id === activeTopic); }
+function getCurrentSection() { return getCurrentTopic()?.sections[activeSection]; }
+
+function renderMarkdown(text) {
+  const lines = text.split("\n");
+  let html = "";
+  let inTable = false;
+  let tableRows = [];
+
+  function flushTable() {
+    if (tableRows.length === 0) { inTable = false; return; }
+    html += `<table style="border-collapse:collapse;margin:14px 0"><tbody>`;
+    tableRows.forEach((row, ri) => {
+      html += `<tr>`;
+      row.forEach(cell => {
+        const style = ri === 0
+          ? `border:1px solid #1e3a50;padding:6px 14px;color:#e0ecfa;background:#132d44;font-weight:bold;font-size:14px`
+          : `border:1px solid #1e3a50;padding:6px 14px;color:#8bbcd8;font-size:14px`;
+        html += `<td style="${style}">${cell}</td>`;
+      });
+      html += `</tr>`;
+    });
+    html += `</tbody></table>`;
+    tableRows = [];
+    inTable = false;
+  }
+
+  function processInline(line) {
+    return line
+      .replace(/\*\*(.*?)\*\*/g, `<strong style="color:#cce6ff">$1</strong>`)
+      .replace(/\*(.*?)\*/g, `<em style="color:#9ac5e8">$1</em>`)
+      .replace(/`(.*?)`/g, `<code>$1</code>`);
+  }
+
+  lines.forEach(line => {
+    if (line.startsWith("|")) {
+      inTable = true;
+      const cells = line.split("|").map(c => c.trim()).filter(Boolean);
+      if (!cells.every(c => /^-+$/.test(c))) tableRows.push(cells);
+      return;
+    }
+    if (inTable) flushTable();
+
+    const pl = processInline(line);
+
+    if (line.startsWith("> ⚠️") || line.startsWith(">")) {
+      const color = getCurrentTopic()?.color || "#888";
+      html += `<blockquote style="border-left:3px solid ${color};padding:10px 14px;margin:10px 0;color:#ffd180;font-style:italic;background:#0f1e2b;border-radius:0 6px 6px 0">${pl.replace(/^>\s?/, "").replace(/^>\s?⚠️\s?/, "⚠️ ")}</blockquote>`;
+    } else if (line.startsWith("### ")) {
+      html += `<h3 style="color:#e0ecfa;margin:18px 0 8px;font-size:16px">${pl.slice(4)}</h3>`;
+    } else if (line.startsWith("## ")) {
+      html += `<h2 style="color:#e0ecfa;margin:18px 0 8px;font-size:18px">${pl.slice(3)}</h2>`;
+    } else if (line.startsWith("- ") || line.startsWith("• ")) {
+      html += `<li style="margin-left:20px;margin-bottom:5px;color:#b8d8ee">${pl.slice(2)}</li>`;
+    } else if (/^\s{2,}/.test(line) && line.trim().length > 0) {
+      // indented formula-like line
+      html += `<div class="formula">${line.trim()}</div>`;
+    } else if (line.trim() === "") {
+      html += `<br>`;
+    } else {
+      html += `<p style="margin:5px 0;color:#b8cfe8;line-height:1.8">${pl}</p>`;
+    }
+  });
+  if (inTable) flushTable();
+  return html;
+}
+
+function buildSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  let html = "";
+  topics.forEach(topic => {
+    const isTActive = topic.id === activeTopic;
+    html += `<button class="topic-btn ${isTActive ? "active" : ""}"
+      style="border-left:3px solid ${isTActive ? topic.color : "transparent"};color:${isTActive ? "#e0ecfa" : "#5a7a96"}"
+      onclick="selectTopic('${topic.id}')">
+      <span>${topic.icon}</span>
+      <span style="flex:1;line-height:1.3">${topic.label}</span>
+    </button>`;
+    if (isTActive) {
+      topic.sections.forEach((s, i) => {
+        const isSActive = activeSection === i;
+        html += `<button class="section-btn ${isSActive ? "active" : ""}"
+          style="color:${isSActive ? topic.color : "#4a6a80"}"
+          onclick="selectSection(${i})">${s.title}</button>`;
+      });
+    }
+  });
+  sidebar.innerHTML = html;
+}
+
+function buildContent() {
+  const topic = getCurrentTopic();
+  const section = getCurrentSection();
+  if (!topic || !section) return;
+
+  document.getElementById("topic-label").innerHTML =
+    `<span style="color:${topic.color}">${topic.icon} ${topic.label}</span>`;
+  document.getElementById("section-title").textContent = section.title;
+  document.getElementById("section-body").innerHTML = renderMarkdown(section.content);
+
+  const navEl = document.getElementById("nav-btns");
+  let navHtml = "";
+  if (activeSection > 0) {
+    navHtml += `<button class="nav-btn-prev" onclick="selectSection(${activeSection - 1})">← Previous</button>`;
+  }
+  if (activeSection < topic.sections.length - 1) {
+    navHtml += `<button class="nav-btn-next" style="background:${topic.color}" onclick="selectSection(${activeSection + 1})">Next →</button>`;
+  } else {
+    const idx = topics.findIndex(t => t.id === activeTopic);
+    if (idx < topics.length - 1) {
+      navHtml += `<button class="nav-btn-next" style="background:${topic.color}" onclick="selectTopic('${topics[idx+1].id}')">Next topic →</button>`;
+    }
+  }
+  navEl.innerHTML = navHtml;
+}
+
+function buildFlashcard() {
+  document.getElementById("card-counter").textContent = `Card ${cardIndex + 1} of ${flashcards.length}`;
+  const box = document.getElementById("card-box");
+  const label = document.getElementById("card-mode-label");
+  const text = document.getElementById("card-text");
+  const hint = document.getElementById("card-hint");
+
+  if (flipped) {
+    box.className = "answer";
+    box.style.background = "#0d1e14";
+    box.style.borderColor = "#1e5c34";
+    label.className = "answer";
+    label.textContent = "✓ Answer";
+    text.className = "answer";
+    text.textContent = flashcards[cardIndex].a;
+    hint.style.display = "none";
+  } else {
+    box.className = "question";
+    box.style.background = "#0d1825";
+    box.style.borderColor = "#1a3048";
+    label.className = "question";
+    label.textContent = "? Question";
+    text.className = "question";
+    text.textContent = flashcards[cardIndex].q;
+    hint.style.display = "block";
+  }
+
+  // Dots
+  let dotsHtml = "";
+  flashcards.forEach((_, i) => {
+    dotsHtml += `<div class="dot ${i === cardIndex ? "active" : ""}" onclick="goToCard(${i})"></div>`;
+  });
+  document.getElementById("card-dots").innerHTML = dotsHtml;
+}
+
+// ─── ACTIONS ─────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  activeTab = tab;
+  const learnView = document.getElementById("learn-view");
+  const flashcardView = document.getElementById("flashcard-view");
+  const btnLearn = document.getElementById("btn-learn");
+  const btnFlash = document.getElementById("btn-flashcards");
+
+  if (tab === "learn") {
+    learnView.style.display = "flex";
+    flashcardView.style.display = "none";
+    btnLearn.className = "tab-btn active";
+    btnFlash.className = "tab-btn inactive";
+  } else {
+    learnView.style.display = "none";
+    flashcardView.style.display = "flex";
+    btnLearn.className = "tab-btn inactive";
+    btnFlash.className = "tab-btn active";
+    buildFlashcard();
+  }
+}
+
+function selectTopic(id) {
+  activeTopic = id;
+  activeSection = 0;
+  buildSidebar();
+  buildContent();
+}
+
+function selectSection(i) {
+  activeSection = i;
+  buildSidebar();
+  buildContent();
+  document.getElementById("content-area").scrollTop = 0;
+}
+
+function flipCard() {
+  flipped = !flipped;
+  buildFlashcard();
+}
+
+function changeCard(dir) {
+  cardIndex = (cardIndex + dir + flashcards.length) % flashcards.length;
+  flipped = false;
+  buildFlashcard();
+}
+
+function goToCard(i) {
+  cardIndex = i;
+  flipped = false;
+  buildFlashcard();
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+buildSidebar();
+buildContent();
+</script>
+</body>
+</html>
