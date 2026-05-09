@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brain Modelling — Lecture 02: Cellular & Circuit Functions</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { min-height: 100vh; background: #08111a; color: #cdd9e5; font-family: 'Georgia', serif; font-size: 15px; }
+  button { font-family: 'Georgia', serif; cursor: pointer; }
+  table { border-collapse: collapse; margin: 14px 0; width: auto; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const topics = [
+  {
+    id: "cell_basics",
+    label: "Cellular & Circuit Functions",
+    color: "#c0392b",
+    icon: "🧠",
+    sections: [
+      {
+        title: "The Neuron: Structural Overview",
+        content: `A **neuron** is the fundamental signaling unit of the nervous system, composed of three main structural compartments, each with a distinct functional role.
+
+**Cell body (soma)**:
+- Contains the nucleus and organelles
+- Metabolic centre of the neuron
+
+**Dendrites (input structure)**:
+- Receive inputs from other neurons
+- Perform *spatio-temporal integration* of inputs
+- Relay integrated signals to the cell body
+
+**Axon (output structure)**:
+- A long fiber that carries messages (**spikes**) away from the cell body
+- Terminates at **axon terminals (synapses)** onto dendrites of other neurons
+
+**Signal flow**: Dendrites → Cell body → Axon hillock → Axon → Axon terminals`,
+      },
+      {
+        title: "Glial Cells (Supportive Cells)",
+        content: `Glial cells are non-neuronal cells that support, protect, and maintain the nervous system. There are three main types:
+
+**Astrocytes**:
+- Provide physical and nutritional support for neurons
+- Hold neurons in place
+- Digest parts of dead neurons
+- Regulate the content of extracellular space
+- Promote synaptic connections
+- Clear excess neurotransmitters
+
+**Oligodendrocytes**:
+- Myelin-forming cells of the **CNS**
+- Wrap axons with myelin sheaths, allowing for faster impulse transduction
+
+**Microglial cells**:
+- Phagocytose and remove foreign or damaged material, cells, or organisms
+- Eliminate previously-formed synapses that are no longer useful (synaptic pruning)
+
+> ⚠️ Glial cells are essential to normal brain function — their dysfunction is implicated in neurological and psychiatric diseases.`,
+      },
+      {
+        title: "Cell Membrane: Structure & Composition",
+        content: `The **cell membrane** is the physical barrier separating the intracellular from the extracellular environment.
+
+**Composition**:
+- Double layer of **phospholipids** — hydrophilic heads face outward, hydrophobic tails face inward
+- **Cholesterol** — stabilizes membrane fluidity
+- Embedded **proteins** — channels, transporters, receptors
+
+**Key membrane proteins**:
+
+| Protein Type | Function |
+|---|---|
+| Glycoproteins | Proteins with carbohydrate attached (recognition, signaling) |
+| Glycolipids | Lipids with carbohydrate attached |
+| Integral membrane proteins | Span the entire bilayer (e.g. ion channels) |
+| Peripheral membrane proteins | Associate with surface only |
+| Protein channels | Allow ion flow across the membrane |
+
+The **phospholipid bilayer** is electrically insulating — ions cannot cross it directly. This property is what makes membrane potential possible.`,
+      },
+    ],
+  },
+  {
+    id: "ion_channels",
+    label: "Ion Channels & Membrane Potential",
+    color: "#2980b9",
+    icon: "⚡",
+    sections: [
+      {
+        title: "Ion Channels: Function & Importance",
+        content: `**Ion channels** are pore-forming membrane proteins and the main information carriers of neuronal electrical activity.
+
+**Functions**:
+- Establishing a **resting membrane potential**
+- Shaping action potentials and other electrical signals by gating the flow of ions across the cell membrane
+- Controlling the flow of ions across membranes
+- Regulating cell volume
+
+**Key properties**:
+- Respond to **specific physical and chemical signals** (they are optimally tuned)
+- Are **heterogeneous** — in different parts of the nervous system, various types of channels carry out specific signaling tasks
+- Allow selected ions (Na⁺, K⁺, Ca²⁺, Cl⁻) to pass through the membrane
+
+> ⚠️ **Ion channels malfunction** → disease. Ion channels are also the **site of action of drugs, poisons, and toxins** (e.g. tetrodotoxin, local anesthetics, antiepileptics).`,
+      },
+      {
+        title: "Ion Channel Selectivity",
+        content: `How do channels discriminate between different ions? The answer lies in the **hydration shell** of ions and the geometry of the channel pore.
+
+**Key concept — hydration shell**:
+- Ions in solution are surrounded by a cloud of water molecules (waters of hydration), attracted by the ion's net charge
+- This shell **increases the effective size** of the ion
+
+**Size paradox**:
+- Na⁺ has a *smaller crystal radius* than K⁺
+- However, because Na⁺ is smaller, its charge is more **localized and concentrated** → it attracts water more strongly
+- Therefore the **hydrated Na⁺ is actually larger** than hydrated K⁺
+
+**Pore selectivity mechanism**:
+- The pore lining can efficiently replace the water molecules that normally shield specific ions
+- Potassium ions can be accommodated in K⁺ channels
+- Sodium ions are too small to allow such effective shielding by the pore lining → cannot pass through K⁺ channels
+
+**Ion permeability** is determined by the interaction of ions with water, the membrane lipid bilayer, and ion channels.`,
+      },
+      {
+        title: "Gating Mechanisms of Ion Channels",
+        content: `Ion channels open and close — a process called **gating**. There are three main physical models:
+
+**Physical mechanisms of opening/closing**:
+- *Localized conformational change* — a structural change in one region of the channel
+- *Generalized structural change* — change occurs along the full length of the channel
+- *Blocking particle* — a cytoplasmic peptide "ball" swings into and out of the channel mouth
+
+**Stimuli that control gating**:
+
+- **Ligand-gated** — a ligand binds a receptor site on the channel; binding energy drives the channel open
+- **Phosphorylation-gated** — regulated by protein phosphorylation/dephosphorylation; energy from high-energy phosphate transfer
+- **Voltage-gated** — open/close with changes in membrane potential; voltage causes conformational change via a charged region of the channel
+- **Stretch-gated** — open/close through mechanical stretch or pressure; energy from cytoskeletal mechanical forces
+
+**Ion flux saturation**:
+- At low ion concentrations, current increases almost linearly with concentration
+- At higher concentrations, current reaches a plateau — the current is said to **saturate**`,
+      },
+      {
+        title: "Transporters, Pumps & Ion Channels",
+        content: `In addition to ion channels, nerve cells contain a **second class of proteins** specialized for moving ions across membranes.
+
+**Key distinction**:
+
+| Property | Ion Channels | Transporters/Pumps |
+|---|---|---|
+| Speed of signaling | Fast (ms) | Slow |
+| Role | Generate electrical signals | Maintain ion gradients |
+| Energy use | Passive (gradient-driven) | Active (ATP-driven) |
+
+**Transporters and pumps** do not participate in rapid neuronal signaling. Instead, they are important for **establishing and maintaining** the concentration gradients of physiologically important ions between the inside and outside of the cell.
+
+**Example — Na⁺/K⁺ ATPase (sodium-potassium pump)**:
+- Pumps **3 Na⁺ out** and **2 K⁺ in** per ATP hydrolyzed
+- Maintains the high K⁺ (inside) and high Na⁺ (outside) gradients
+- Resting membrane potential is established when K⁺ movement out equals K⁺ movement in`,
+      },
+      {
+        title: "Resting Membrane Potential",
+        content: `The **resting membrane potential** refers to differences in electrical charge across the membrane when the cell is not firing.
+
+**Value**: ~**−70 mV** (inside negative relative to outside)
+
+**What maintains it?**
+
+1. In a resting cell: higher K⁺ inside; higher Na⁺ outside; negatively charged proteins trapped inside
+2. There are more **K⁺ leak channels** than Na⁺ leak channels → K⁺ diffuses out along its gradient
+3. The tendency for K⁺ to leave is **opposed** by the negative charge inside the cell
+4. The **Na⁺/K⁺ pump** maintains these differentials by pumping 3 Na⁺ out and 2 K⁺ in (ATP-driven)
+
+**Nernst Equilibrium Potential** (for a single ion):
+
+  V_m = E_k = 60 log [K⁺]_o / [K⁺]_i  (mV)
+
+**Goldman-Hodgkin-Katz (GHK) Equation** (multiple ions):
+
+  V_m = 60 log ( [K⁺]_o + α[Na⁺]_o ) / ( [K⁺]_i + α[Na⁺]_i )  (mV)
+
+  where α = P_Na / P_K (ratio of permeabilities)`,
+      },
+    ],
+  },
+  {
+    id: "action_potential",
+    label: "Action Potential",
+    color: "#8e44ad",
+    icon: "🔥",
+    sections: [
+      {
+        title: "Neuronal Firing: Action Potential",
+        content: `An **action potential (AP)** is a rapid depolarization of the membrane — the fundamental unit of neuronal communication.
+
+**Key features**:
+- Starts at the **axon hillock** and passes quickly along the axon
+- The membrane is quickly **repolarized** to allow subsequent firing
+
+**Phases and ion channels involved**:
+
+1. *Resting state* (~−70 mV): leak channels maintain resting potential
+2. *Threshold* (~−55 mV): enough Na⁺ channels open → positive feedback
+3. *Depolarization*: **Na⁺ channels OPEN** → rapid Na⁺ influx → V rises to ~+40 mV
+4. *Peak*: Na⁺ channels close (inactivate)
+5. *Repolarization*: **K⁺ channels OPEN** → K⁺ flows out → V returns toward rest
+6. *Hyperpolarization* (undershoot): K⁺ channels still open → V dips below rest
+7. *Return to rest*: K⁺ channels close, Na⁺/K⁺ pump restores gradients
+
+**Historical note**: Luigi Galvani (1794) first showed nerve and muscle could be activated by charged electrodes, suggesting electrical signaling.`,
+      },
+      {
+        title: "Refractory Period",
+        content: `Each spike is followed by a **refractory period** — the time after an AP during which the excitable cell cannot produce another action potential.
+
+**Absolute refractory period**:
+- It is **impossible** to evoke another AP during this window
+- Occurs during the spike and immediately after
+- Na⁺ channels are open and then **inactivated** — they cannot respond to a new stimulus
+- Corresponds to the red zone on the AP trace
+
+**Relative refractory period**:
+- A **stronger than usual stimulus** is required to evoke an AP
+- Corresponds to the hyperpolarization phase
+- Part of the Na⁺ channels have **recovered** from inactivation
+- K⁺ channels are still partially open → membrane is harder to depolarize
+- Corresponds to the blue zone on the AP trace
+
+**Functional significance**:
+- Refractory periods set a **maximum firing frequency** for each neuron
+- They ensure **unidirectional propagation** of APs along the axon (cannot go backward)`,
+      },
+      {
+        title: "All-or-None Response",
+        content: `The action potential obeys the **all-or-none principle** — one of the most fundamental rules of neuronal signaling.
+
+**The rule**:
+- If the stimulus does NOT reach threshold → **no AP fires**
+- If the stimulus EXCEEDS threshold → a **full AP is produced**
+- The intensity of the AP **cannot be increased** by increasing stimulus intensity
+
+**What changes with stronger stimuli?**
+- The *amplitude* of each spike remains the same
+- But the neuron fires **more frequently** (higher firing rate)
+- This is **rate coding** — stimulus intensity is encoded in the frequency of APs, not their size
+
+**Examples from the all-or-none principle**:
+
+| Stimulus | Response |
+|---|---|
+| Subthreshold | No AP, small graded depolarization |
+| Weak (barely threshold) | Single AP |
+| Medium | Several APs |
+| Strong | High-frequency train of APs |`,
+      },
+      {
+        title: "Propagation of Action Potential",
+        content: `Once an AP fires at the axon hillock, it must travel down the axon to reach the synaptic terminals.
+
+**Mechanism — local current spread (electrotonic conduction)**:
+- The depolarized region creates **local currents** that flow into adjacent membrane regions
+- Adjacent membrane is depolarized above threshold → new AP fires there
+- This process repeats, creating a **wave of depolarization** moving along the axon
+
+**Directionality**:
+- Starts at the **axon hillock**
+- Propagates **distally in one direction** (away from soma)
+- Cannot go backward because the region behind is in the **absolute refractory period**
+
+**Speed of propagation**:
+- Unmyelinated axons: ~0.5 m/s
+- Myelinated axons: up to 70–120 m/s (saltatory conduction between nodes of Ranvier)
+
+**Induction of AP**:
+- *Hyperpolarizing current* → membrane goes more negative → no AP
+- *Depolarizing current below threshold* → graded depolarization, no AP
+- *Depolarizing current above threshold* → full AP with overshoot, repolarization, and undershoot`,
+      },
+    ],
+  },
+  {
+    id: "synapse",
+    label: "Synapse & Neurotransmission",
+    color: "#27ae60",
+    icon: "🔗",
+    sections: [
+      {
+        title: "The Synapse: Structure & Types",
+        content: `A **synapse** is the specialized junction where a neuron signals to another neuron, muscle, or gland.
+
+**Main structural components**:
+- *Presynaptic membrane* — contains synaptic vesicles loaded with neurotransmitter
+- *Synaptic cleft* — narrow gap between pre- and postsynaptic membranes (**30–50 nm**)
+- *Postsynaptic membrane* — contains neurotransmitter receptors
+
+**Anatomical classification** (based on where the axon terminal contacts):
+- *Axoaxonic* — axon onto axon
+- *Axodendritic* — axon onto dendrite (most common)
+- *Axosomatic* — axon onto cell body (soma)
+
+**Functional classification**:
+- *Chemical synapse* — neurotransmitter released from vesicles; slower, but amplifiable and modulatable
+- *Electrical synapse* — direct ionic connection via gap junctions; very fast, bidirectional
+- *Mixed synapse* — both chemical and electrical components`,
+      },
+      {
+        title: "Synaptic Transmission: Step by Step",
+        content: `Chemical synaptic transmission involves a precise sequence of events:
+
+1. **Transmitter synthesized** and stored in synaptic vesicles
+2. **Action potential invades** the presynaptic terminal
+3. **Depolarization** of presynaptic terminal → opening of **voltage-gated Ca²⁺ channels**
+4. **Influx of Ca²⁺** through channels
+5. **Ca²⁺ causes vesicles to fuse** with the presynaptic membrane (exocytosis)
+6. **Transmitter released** into the synaptic cleft via exocytosis
+7. **Transmitter binds** to receptor molecules in the postsynaptic membrane
+8. **Opening or closing** of postsynaptic ion channels
+9. **Postsynaptic current** causes excitatory or inhibitory postsynaptic potential (EPSP/IPSP) → changes excitability of the postsynaptic cell
+10. **Removal** of neurotransmitter by glial uptake or enzymatic degradation
+11. **Retrieval** of vesicular membrane from plasma membrane (endocytosis)
+
+> ⚠️ **Ca²⁺ is the critical trigger** for neurotransmitter release. Blocking Ca²⁺ channels prevents transmission.`,
+      },
+      {
+        title: "Neurotransmitters",
+        content: `There are **more than 100 known neurotransmitters**. They are divided into two broad classes:
+
+**Small-molecule transmitters** (synthesized locally at terminals, fast):
+- *Monoamines*: Acetylcholine (ACh), Serotonin, Histamine
+- *Catecholamines*: Dopamine, Norepinephrine, Epinephrine
+- *Amino acids*: Glutamate, GABA, Glycine
+
+**Large-molecule transmitters** (neuropeptides, synthesized in cell body):
+- Substance P, Enkephalin, Vasopressin
+
+**Unconventional transmitters** (not stored in vesicles):
+- ATP, NO (nitric oxide), CO₂, H₂S
+
+**Neurotransmitter types by effect**:
+
+| Type | Effect | Examples |
+|---|---|---|
+| Excitatory | Depolarize postsynaptic cell (EPSP) | Glutamate, Acetylcholine, Adrenaline |
+| Inhibitory | Hyperpolarize postsynaptic cell (IPSP) | GABA, Serotonin, Glycine |
+| Modulatory | Modify neuronal excitability over longer timescales | Dopamine, Acetylcholine, Histamine, Cannabinoids |
+
+**EPSP magnitude**: ~8 mV, latency ~0.5 ms  
+**IPSP magnitude**: ~−2 mV`,
+      },
+      {
+        title: "Neurotransmitter Receptors",
+        content: `Neurotransmitters act by binding to **receptors** on the postsynaptic membrane. Two major classes exist:
+
+**Ligand-Gated Ion Channels (Ionotropic receptors)**:
+- The receptor **IS** the ion channel — binding opens the channel directly
+- Fast effect (milliseconds)
+- Produce EPSP or IPSP directly
+- Examples: AMPA receptors (Na⁺/K⁺), NMDA receptors (Na⁺/K⁺/Ca²⁺), GABA_A receptors (Cl⁻), nicotinic ACh receptors
+
+**G-Protein Coupled Receptors (Metabotropic receptors)**:
+- The receptor is **separate** from the effector channel
+- Binding activates an intracellular **G-protein** → triggers intracellular signaling cascade
+- Slower effect (seconds to minutes), but longer-lasting and more diverse
+- Examples: mGluR (metabotropic glutamate), GABA_B (K⁺ channel or Ca²⁺ suppression), muscarinic ACh
+
+**EPSPs in the brain** are largely mediated by **Glutamate-gated channels** (AMPA and NMDA receptors)
+
+**IPSPs in the brain** are largely mediated by **GABA_A receptors** (Cl⁻ selective, ionotropic) and GABA_B (metabotropic → K⁺ opening or Ca²⁺ suppression)`,
+      },
+    ],
+  },
+  {
+    id: "plasticity",
+    label: "Synaptic Plasticity",
+    color: "#e67e22",
+    icon: "🔄",
+    sections: [
+      {
+        title: "What Is Synaptic Plasticity?",
+        content: `**Synaptic plasticity** refers to the phenomenon whereby the **strength of synaptic connections** between neurons changes over time.
+
+**Key properties**:
+- Synapses are extremely **plastic** — they can change their strength either by their own activity or through activity in another pathway
+- Central to understanding the mechanisms of **learning and memory**
+
+**Two types by origin**:
+- *Intrinsic (homosynaptic)* — changes in the strength of a synapse brought about by its **own** activity
+- *Extrinsic (heterosynaptic)* — a change in the strength of a synapse brought about by **activity in another pathway**
+
+**Two types by duration**:
+
+| Type | Duration | Proposed Role |
+|---|---|---|
+| Short-term synaptic plasticity (STSP) | Milliseconds to minutes | Online processing of temporal information |
+| Long-term synaptic plasticity (LTSP) | ≥ tens of minutes to infinite | Learning and memory formation |`,
+      },
+      {
+        title: "Short-Term Synaptic Plasticity (STSP)",
+        content: `**Short-term synaptic plasticity (STSP)** is a temporary change in the strength of synaptic transmission, lasting from milliseconds to minutes.
+
+**Typically caused by**:
+- Changes in the **release of neurotransmitters** from the presynaptic neuron
+- Changes in the **sensitivity of the postsynaptic neuron** to neurotransmitters
+
+**Three main properties of STSP**:
+
+**Synaptic Facilitation**:
+- A second stimulus produces a **larger EPSP** than the first
+- Mechanism: residual Ca²⁺ from first stimulus adds to Ca²⁺ from second → more vesicles released
+- Key mechanism: *residual calcium*
+
+**Synaptic Depression**:
+- A second stimulus produces a **smaller EPSP** than the first (200 ms after the first)
+- Mechanism: depletion of readily releasable vesicles
+
+**Post-tetanic Potentiation (PTP)**:
+- Relatively persistent (minutes) enhancement of synaptic strength **following a brief train of spikes (a tetanus)**
+- After high-frequency stimulation, synapses are transiently stronger`,
+      },
+      {
+        title: "Long-Term Synaptic Plasticity (LTSP)",
+        content: `**Long-term synaptic plasticity** involves changes in the structure and function of the synapse that **persist for hours, days, or indefinitely**.
+
+**Two main forms**:
+
+**Long-Term Potentiation (LTP)**:
+- Persistent **strengthening** of synaptic connections
+- Induced by **high-frequency stimulation (HFS)**
+- Triggers activation of **NMDA receptors** on the postsynaptic neuron
+- Ca²⁺ enters the postsynaptic neuron → activates **protein kinases** → phosphorylation of proteins → more AMPA receptors inserted
+- Associated with **learning and memory formation**
+
+**Long-Term Depression (LTD)**:
+- Persistent **weakening** of synaptic connections
+- Induced by **low-frequency stimulation (LFS)**
+- Decreases release of neurotransmitters and activates different receptor types
+- Triggers **protein phosphatases** → removes phosphate groups → removal of synaptic receptors or changes in gene expression
+- Associated with **forgetting and pruning of unused connections**
+
+> ⚠️ The same synapse can undergo both LTP and LTD depending on the **pattern and frequency** of activity — this is Hebbian plasticity.`,
+      },
+      {
+        title: "EPSP, IPSP & Shunting Inhibition",
+        content: `**Excitatory Postsynaptic Potential (EPSP)**:
+- Caused by *influx of positively charged ions* (mainly Na⁺) into the postsynaptic cell
+- Depolarizes the membrane → makes AP more likely
+- Mediated by **Glutamate-gated channels** (AMPA, NMDA) in the brain
+
+**Inhibitory Postsynaptic Potential (IPSP)**:
+- Caused by *efflux of positively charged ions* (K⁺) OR *influx of negatively charged ions* (Cl⁻)
+- Hyperpolarizes the membrane → makes AP less likely
+- Mediated by **GABA_A receptors** (Cl⁻ selective) in the brain
+
+**Shunting Inhibition**:
+- Intra- and extracellular fluids are **highly conductive**; the membrane is **highly resistive**
+- Inhibitory signals generated **close to the cell body** or on dendrites cause a **reduction in postsynaptic membrane resistance** (increased conductance)
+- This creates a "short circuit" that **reduces the effectiveness of excitatory inputs**
+- Does NOT prevent the neuron from firing entirely — it **reduces the impact** of excitatory signals
+- Regulates overall neuronal excitability and fine-tunes the E/I balance in neural circuits
+
+**Synaptic Integration**:
+- The process by which information from **multiple synaptic inputs** is combined and transformed
+- Occurs in the **dendrites and cell body**
+- Determines whether the neuron will **fire an action potential**`,
+      },
+    ],
+  },
+  {
+    id: "recording",
+    label: "Multiscale Recording Techniques",
+    color: "#16a085",
+    icon: "📡",
+    sections: [
+      {
+        title: "Overview: Measuring Brain Activity",
+        content: `**Electrophysiology** is the branch of neuroscience that explores the electrical activity of living neurons and investigates the molecular and cellular processes that govern their signaling.
+
+**Why measure brain activity?**
+- Decode intercellular and intracellular messages
+- Answer systems-level questions (role of a neuron in a circuit or behavior)
+- Investigate specific ion channels, membrane potentials, and molecules
+
+**Scale of techniques** (temporal resolution decreases from left to right):
+
+| Technique | Temporal Resolution | Spatial Scale |
+|---|---|---|
+| Single-cell recording | <1 ms | Single neuron |
+| Multi-electrode array (MEA) | <1 ms | Local population |
+| ECoG | ~1 ms | Brain surface region |
+| EEG | ~1 ms | Large cortical area |
+| Calcium imaging | ~100 ms | Single to population |
+| fMRI (BOLD) | ~1 s | Whole brain |
+
+> ⚠️ **Trade-off**: high temporal and spatial resolution are difficult to achieve simultaneously. Single-cell methods have high resolution but limited spatial coverage. EEG covers large areas but poor spatial resolution.`,
+      },
+      {
+        title: "Electrophysiology Techniques",
+        content: `Three main categories are defined by where the recording electrode is placed:
+
+**Extracellular recording**:
+- Electrode placed **just outside** the neuron
+- Records the **field potential** generated by nearby neurons
+- Less invasive; can record from multiple neurons simultaneously
+- Signal is smaller (µV range) and appears as a biphasic waveform
+
+**Intracellular recording**:
+- Electrode inserted **into the neuron**
+- Records the full **membrane potential** including resting potential
+- Signal is larger (mV range); reveals all phases of AP
+
+**Patch-clamp technique**:
+- A glass pipette containing electrolyte solution is **tightly sealed** onto the cell membrane
+- Isolates a patch of membrane electrically
+- Currents flowing through channels flow into the pipette → recorded by an electrode
+- Developed by **Neher and Sakmann** (Nobel Prize 1991)
+
+**Comparison**:
+
+| Method | Extracellular | Intracellular | Patch-clamp |
+|---|---|---|---|
+| Signal | µV | mV | pA / mV |
+| Invasion | None | High | Low–High |
+| What it measures | Field potentials | Full V_m | Single channels / whole cell |`,
+      },
+      {
+        title: "Patch-Clamp Configurations",
+        content: `The **patch-clamp** technique has four recording configurations, each suited to different experimental questions:
+
+**Cell-attached recording**:
+- Pipette approaches cell membrane → **gentle suction** creates a tight gigaohm seal (giga-seal)
+- Records single-channel currents through the patch without disrupting the cell
+
+**Whole-cell recording**:
+- From cell-attached, apply **strong suction** to rupture the membrane
+- Pipette gains access to the cytoplasm → records **full membrane potential or whole-cell currents**
+- Two modes:
+  - *Current clamp* → records **postsynaptic potentials (PSPs)** — changes in V_m
+  - *Voltage clamp* → keeps V constant → records **postsynaptic currents (PSCs)**
+
+**Inside-out recording**:
+- From cell-attached, retract the pipette → patch separates from membrane, **cytoplasmic side facing the bath solution**
+- Allows manipulation of intracellular messengers
+
+**Outside-out recording**:
+- From whole-cell, retract the pipette → two pieces of membrane anneal → forms vesicle with **extracellular side facing bath**
+- Allows application of extracellular ligands (e.g. neurotransmitters) while recording single channels`,
+      },
+      {
+        title: "Multi-Electrode Arrays (MEA)",
+        content: `**Multi-electrode arrays (MEA)** allow **simultaneous recording of activity from multiple neurons** using an array of small electrodes.
+
+**Applications**:
+- Understand the spatial organization of synaptic plasticity
+- Map signal processing across brain circuits
+- Record spontaneous and evoked activity in brain slices or spheroids
+
+**Types of MEA**:
+- *2D microchip* — flat array, contacts surface of tissue slice
+- *3D microchip* — electrodes protrude into the tissue for better contact with deep layers
+- *3D HD MEA* — high-density, used for organotypic and acute brain slices
+
+**Data analysis workflow**:
+1. Load raw data → visualize MEA heat map of activity
+2. **Spike detection** — identify individual action potential events above threshold
+3. **Spike sorting** — classify spikes by shape using PCA (principal component analysis) to identify different neurons on the same electrode
+4. **Select ROIs** (regions of interest) → extract mean firing rate for each channel
+
+**Local Field Potential (LFP)**:
+- The **summed electrical activity** of a population of neurons recorded extracellularly
+- Reflects synaptic inputs and sub-threshold activity of a local network`,
+      },
+      {
+        title: "Optical Techniques: Calcium Imaging & Two-Photon",
+        content: `**Calcium imaging**:
+- Uses **fluorescent dyes** (or genetically encoded indicators like GCaMP) that change intensity in response to intracellular Ca²⁺ levels
+- Since Ca²⁺ enters during APs, fluorescence changes reflect **neuronal activity**
+- Can image hundreds of neurons simultaneously
+- Common imaging devices: photodiode array, CCD camera, confocal microscope, two-photon microscope, endoscope, portable (miniscope)
+
+***In vivo* microendoscopic calcium imaging**:
+- Record from multiple neurons in **freely behaving mice**
+- Image deep brain regions with a miniaturized microscope
+- Monitor network activity and correlate with behavior
+
+**Two-Photon Microscopy (TPM)**:
+- Uses **pulsed infrared laser** — two low-energy photons excite fluorophores simultaneously
+- Advantages: sub-micrometer resolution; reduced photobleaching and photodamage; deeper tissue penetration (~500 µm)
+- Allows imaging of **dendritic and spine activity** at high resolution
+- Can record from **behaving animals** in real-time
+- *FEMTOsmart* — a common commercial two-photon system
+
+> ⚠️ **Key difference**: Calcium imaging tracks activity indirectly (via Ca²⁺), while patch-clamp records electrical activity directly.`,
+      },
+      {
+        title: "Brain-Scale Techniques: EEG, MEG, MRI, fMRI, PET, CT",
+        content: `**EEG — Electroencephalography**:
+- Records voltage fluctuations on the **scalp** via electrodes
+- Excellent temporal resolution (<1 ms); poor spatial resolution
+- EEG frequency bands:
+
+| Band | Frequency | Associated State |
+|---|---|---|
+| Delta | 0.5–4 Hz | Sleep, dreaming |
+| Theta | 4–8 Hz | Drowsiness |
+| Alpha | 8–13 Hz | Restful, reflective |
+| Beta | 13–30 Hz | Active, busy mind |
+| Gamma | 31–100 Hz | Problem solving, concentration |
+
+**MEG — Magnetoencephalography**:
+- Measures the **magnetic fields** produced by neuronal electrical currents
+- Better spatial resolution than EEG; used for pre-surgical mapping, epilepsy
+
+**MRI — Magnetic Resonance Imaging**:
+- Produces structural images of brain anatomy using magnetic fields
+- T1-weighted: gray/white matter contrast; T2-weighted: CSF bright
+
+**fMRI — Functional MRI**:
+- Detects changes in **blood flow and oxygen** (BOLD signal) as a proxy for neural activity
+- Temporal resolution ~1 s; good spatial resolution (~mm); non-invasive
+
+**PET — Positron Emission Tomography**:
+- Uses **radioactive tracers** attached to glucose to image metabolic activity
+- Useful for Alzheimer's, epilepsy, tumor detection
+
+**CT — Computerized Tomography**:
+- Series of X-rays forming cross-sectional images
+- Detects brain injuries, bleeding, structural changes`,
+      },
+    ],
+  },
+  {
+    id: "circuits",
+    label: "Microcircuits & Brain Modelling",
+    color: "#c0392b",
+    icon: "🕸️",
+    sections: [
+      {
+        title: "Cerebellum as a Microcircuit Example",
+        content: `The **cerebellum** is an ideal example of a well-characterized microcircuit, organized in the cortex (3 layers) and deep nuclei.
+
+**Cerebellar cortex layers**:
+- *Molecular layer* — dendrites of Purkinje cells + axons of granule cells (parallel fibers)
+- *Purkinje layer* — cell bodies of Purkinje cells
+- *Granular layer* — granule cells and Golgi cells
+
+**Key cell types**:
+- *Purkinje cell (PC)* — **largest neuron in the brain**; the sole output of the cerebellar cortex; **inhibitory**
+- *Granule cell (GrC)* — **smallest and most numerous** neurons in the brain; excitatory; receive mossy fiber input
+- *Golgi cell (GoC)* — inhibitory interneuron; regulates granule cell activity
+- *Basket cell (BC)* and *Stellate cell (SC)* — inhibitory interneurons in the molecular layer
+
+> ⚠️ **Almost all neurons in the cerebellar cortex are inhibitory** — the only excitatory neurons are granule cells.
+
+**Inputs**:
+- *Mossy fibers (mf)* → contact granule cells
+- *Climbing fibers (cf)* from inferior olive → directly contact Purkinje cells`,
+      },
+      {
+        title: "Neurotransmitter Systems & Disease",
+        content: `Different neurotransmitter systems modulate different brain circuits and are altered in various diseases.
+
+**Dopaminergic system**:
+- Prefrontal cortex ↓, Ventral tegmental area ↓, Striatum ↑
+- Implicated in: schizophrenia, Parkinson's disease, addiction
+
+**Glutamatergic system**:
+- Cortex ↓, Striatum ↓, Hippocampus ↓
+- Implicated in: schizophrenia, epilepsy, depression
+
+**Serotonergic system**:
+- Prefrontal cortex ↓, Basal ganglia ↑
+- Implicated in: depression, anxiety, OCD
+
+**GABAergic system**:
+- Prefrontal cortex ↓, Basal ganglia ↑, Thalamus ↑, Hippocampus ↑
+- Implicated in: schizophrenia, epilepsy, anxiety
+
+**Cholinergic system**:
+- Dorsolateral prefrontal cortex ↓, Cingulate gyrus ↓, Hippocampus ↓
+- Implicated in: Alzheimer's disease, schizophrenia
+
+**Multiscale brain modelling** (D'Angelo & Jirsa 2022):
+- *Detailed/simplified neuron models* → *Spiking neural networks (SNN)* → *Mean-field models* → *Neural mass models* + *Connectome* → *Virtual brain models* → link to behavior`,
+      },
+    ],
+  },
+];
+
+const flashcards = [
+  { q: "What are the three main types of glial cells and their primary functions?", a: "Astrocytes: support, nutrition, regulate extracellular space, clear neurotransmitters. Oligodendrocytes: form myelin in the CNS for faster impulse conduction. Microglia: phagocytose damaged material and eliminate unused synapses." },
+  { q: "Why do ion channels show selectivity — specifically why does K⁺ pass through a K⁺ channel but Na⁺ does not?", a: "Although Na⁺ has a smaller crystal radius, its charge is more concentrated, so it attracts water more strongly. Its hydrated size is therefore larger than hydrated K⁺. The K⁺ channel pore can replace K⁺'s water shell effectively, but cannot do the same for the smaller Na⁺ ion, so Na⁺ cannot pass." },
+  { q: "What are the four types of stimuli that control ion channel gating?", a: "Ligand-gated (ligand binding opens channel), Phosphorylation-gated (protein phosphorylation/dephosphorylation), Voltage-gated (change in membrane potential causes conformational change), Stretch-gated (mechanical stretch/pressure via cytoskeleton)." },
+  { q: "What is the Goldman-Hodgkin-Katz equation and what does it calculate?", a: "V_m = 60 log ([K⁺]_o + α[Na⁺]_o) / ([K⁺]_i + α[Na⁺]_i), where α = P_Na/P_K. It calculates the resting membrane potential accounting for the relative permeabilities of both K⁺ and Na⁺ across the membrane." },
+  { q: "What are the roles of Na⁺ channels and K⁺ channels during the three main phases of an action potential?", a: "Depolarization: Na⁺ channels OPEN → Na⁺ influx → V rises to ~+40 mV. Na⁺ channels then close (inactivate). Repolarization: K⁺ channels OPEN → K⁺ efflux → V falls back toward rest. Hyperpolarization: K⁺ channels stay open briefly → V dips below resting potential." },
+  { q: "What is the difference between the absolute and relative refractory period?", a: "Absolute: it is impossible to fire another AP (Na⁺ channels are inactivated). Relative: a stronger-than-normal stimulus can fire an AP (some Na⁺ channels have recovered, but K⁺ channels are still partially open causing hyperpolarization)." },
+  { q: "What are the 11 sequential steps of synaptic transmission at a chemical synapse?", a: "(1) Transmitter synthesized/stored in vesicles, (2) AP invades terminal, (3) presynaptic depolarization opens Ca²⁺ channels, (4) Ca²⁺ influx, (5) Ca²⁺ causes vesicle fusion, (6) transmitter released by exocytosis, (7) transmitter binds postsynaptic receptors, (8) postsynaptic channels open/close, (9) EPSP/IPSP changes excitability, (10) transmitter removed by glial uptake or degradation, (11) vesicle membrane retrieved by endocytosis." },
+  { q: "What is the difference between ionotropic and metabotropic neurotransmitter receptors?", a: "Ionotropic: receptor IS the ion channel; binding opens it directly; fast (ms). Metabotropic (GPCR): receptor activates intracellular G-protein → signaling cascade; slower (seconds/minutes) but longer-lasting and more diverse effects." },
+  { q: "What are the three properties of short-term synaptic plasticity (STSP)?", a: "Synaptic Facilitation: second stimulus produces larger EPSP (due to residual Ca²⁺). Synaptic Depression: second stimulus produces smaller EPSP (due to vesicle depletion). Post-tetanic Potentiation (PTP): minutes-long enhancement after a brief high-frequency train of spikes (tetanus)." },
+  { q: "Compare LTP and LTD: what induces them and what are the key molecular mechanisms?", a: "LTP: induced by HIGH-frequency stimulation → NMDA receptor activation → Ca²⁺ influx → protein kinases → phosphorylation → more AMPA receptors inserted → stronger synapse. LTD: induced by LOW-frequency stimulation → different receptor activation → protein phosphatases → AMPA receptors removed → weaker synapse." },
+  { q: "What is shunting inhibition and why is it functionally important?", a: "Shunting inhibition occurs when inhibitory signals near the cell body increase membrane conductance (reduce resistance), creating a 'short circuit' that reduces the effectiveness of excitatory inputs without necessarily hyperpolarizing the cell. It fine-tunes the E/I balance and regulates neuronal excitability." },
+  { q: "What are the four patch-clamp configurations and what does each measure?", a: "Cell-attached: single-channel currents through a sealed membrane patch. Whole-cell: full membrane potential (current clamp) or whole-cell currents (voltage clamp). Inside-out: isolated patch with cytoplasmic side facing bath. Outside-out: isolated patch with extracellular side facing bath (for applying ligands)." },
+  { q: "What is the difference between current clamp and voltage clamp recording modes?", a: "Current clamp: current is injected, membrane voltage is free to change — records postsynaptic POTENTIALS (PSPs, including EPSPs and IPSPs). Voltage clamp: voltage is held constant by feedback — records the postsynaptic CURRENTS (PSCs, EPSCs, IPSCs) flowing through ion channels." },
+  { q: "What are the five EEG frequency bands and their associated brain states?", a: "Delta (0.5–4 Hz): sleep/dreaming. Theta (4–8 Hz): drowsiness. Alpha (8–13 Hz): restful/reflective. Beta (13–30 Hz): active/busy mind. Gamma (31–100 Hz): problem solving/concentration." },
+  { q: "What is the key trade-off between different brain recording techniques (e.g. single-cell vs. EEG)?", a: "Single-cell recording and MEA have excellent temporal (<1 ms) and spatial resolution but limited brain coverage. EEG covers large areas non-invasively but has poor spatial resolution. fMRI has good spatial resolution (~mm) but poor temporal resolution (~1 s). Higher resolution in one dimension usually means lower resolution in the other." },
+  { q: "What is the structure and function of the cerebellar microcircuit?", a: "Mossy fibers → Granule cells (excitatory, smallest neurons) → parallel fibers → Purkinje cells (largest neurons, inhibitory, sole output). Climbing fibers from inferior olive directly contact Purkinje cells. Golgi cells inhibit granule cells. Almost all cerebellar cortex neurons are inhibitory except granule cells." },
+  { q: "What is the EPSP magnitude and latency, and how does IPSP compare?", a: "EPSP: magnitude ~8 mV, latency ~0.5 ms (caused by influx of positively charged ions, mainly Na⁺). IPSP: magnitude ~−2 mV (caused by efflux of positive ions like K⁺, or influx of negative ions like Cl⁻). EPSPs depolarize; IPSPs hyperpolarize." },
+  { q: "What is spike sorting in MEA data analysis?", a: "Spike sorting is the process of classifying detected spikes (action potentials) by their waveform shape using PCA (principal component analysis). Spikes from different neurons on the same electrode have different shapes, so they can be separated into distinct 'units' representing individual neurons." },
+];
+
+// State
+let activeTab = "learn";
+let activeTopic = topics[0].id;
+let activeSection = 0;
+let cardIndex = 0;
+let flipped = false;
+
+function renderMarkdown(text, topicColor) {
+  const lines = text.split("\n");
+  let html = "";
+  let inTable = false;
+  let tableRows = [];
+
+  const flushTable = () => {
+    if (tableRows.length > 0) {
+      html += `<table>`;
+      tableRows.forEach((row, ri) => {
+        html += `<tr>`;
+        row.forEach(cell => {
+          html += `<td style="border:1px solid #1e3a50;padding:6px 14px;color:${ri===0?'#e0ecfa':'#8bbcd8'};background:${ri===0?'#132d44':'transparent'};font-weight:${ri===0?'bold':'normal'};font-size:14px">${cell}</td>`;
+        });
+        html += `</tr>`;
+      });
+      html += `</table>`;
+      tableRows = [];
+    }
+    inTable = false;
+  };
+
+  lines.forEach(line => {
+    if (line.startsWith("|")) {
+      inTable = true;
+      const cells = line.split("|").map(c => c.trim()).filter(Boolean);
+      if (!cells.every(c => /^-+$/.test(c))) tableRows.push(cells);
+      return;
+    }
+    if (inTable) flushTable();
+
+    line = line
+      .replace(/\*\*(.*?)\*\*/g, "<strong style='color:#cce6ff'>$1</strong>")
+      .replace(/\*(.*?)\*/g, "<em style='color:#9ac5e8'>$1</em>")
+      .replace(/`(.*?)`/g, "<code style='background:#0d2233;padding:2px 6px;border-radius:3px;font-family:monospace;font-size:0.87em;color:#a8d8ea'>$1</code>");
+
+    if (line.startsWith("> ⚠️") || line.startsWith(">")) {
+      html += `<blockquote style="border-left:3px solid ${topicColor||'#888'};padding:10px 14px;margin:10px 0;color:#ffd180;font-style:italic;background:#0f1e2b;border-radius:0 6px 6px 0">${line.replace(/^>\s?/, "")}</blockquote>`;
+    } else if (/^\d+\.\s/.test(line)) {
+      html += `<div style="display:flex;gap:10px;margin:6px 0;color:#b8d8ee"><span style="color:#6a9dbf;min-width:20px">${line.match(/^\d+/)[0]}.</span><span>${line.replace(/^\d+\.\s/, "")}</span></div>`;
+    } else if (line.startsWith("- ") || line.startsWith("• ")) {
+      html += `<li style="margin-left:20px;margin-bottom:5px;color:#b8d8ee">${line.slice(2)}</li>`;
+    } else if (line.trim() === "") {
+      html += `<br>`;
+    } else {
+      html += `<p style="margin:5px 0;color:#b8cfe8;line-height:1.8">${line}</p>`;
+    }
+  });
+  if (inTable) flushTable();
+  return html;
+}
+
+function render() {
+  const currentTopic = topics.find(t => t.id === activeTopic);
+  const currentSec = currentTopic?.sections[activeSection];
+
+  let html = `
+  <div style="min-height:100vh;background:#08111a;color:#cdd9e5;font-family:'Georgia',serif;font-size:15px">
+    <div style="background:#0d1d2e;border-bottom:1px solid #1a3048;padding:16px 28px;display:flex;align-items:center;gap:16px">
+      <div style="flex:1">
+        <div style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#c0392b;margin-bottom:3px">Neuroscience — Lecture 02</div>
+        <div style="font-size:20px;font-weight:bold;color:#e8f0f8">Cellular & Circuit Functions and Recording Techniques</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button onclick="switchTab('learn')" style="padding:7px 18px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-family:inherit;background:${activeTab==='learn'?'#2a1010':'#121f2e'};color:${activeTab==='learn'?'#e07070':'#7a9bb8'};font-weight:${activeTab==='learn'?'bold':'normal'}">📖 Study</button>
+        <button onclick="switchTab('flashcards')" style="padding:7px 18px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-family:inherit;background:${activeTab==='flashcards'?'#2a1010':'#121f2e'};color:${activeTab==='flashcards'?'#e07070':'#7a9bb8'};font-weight:${activeTab==='flashcards'?'bold':'normal'}">🃏 Flashcards</button>
+      </div>
+    </div>`;
+
+  if (activeTab === "learn") {
+    html += `<div style="display:flex;height:calc(100vh - 65px)">
+      <div style="width:215px;background:#0a1825;border-right:1px solid #1a3048;overflow-y:auto;flex-shrink:0">`;
+
+    topics.forEach(topic => {
+      const isActive = activeTopic === topic.id;
+      html += `<div>
+        <button onclick="selectTopic('${topic.id}')" style="width:100%;padding:13px 16px;text-align:left;border:none;cursor:pointer;background:${isActive?'#111e2d':'transparent'};border-left:${isActive?`3px solid ${topic.color}`:'3px solid transparent'};color:${isActive?'#e0ecfa':'#5a7a96'};display:flex;gap:8px;align-items:center;font-size:13px">
+          <span>${topic.icon}</span><span style="flex:1;line-height:1.3">${topic.label}</span>
+        </button>`;
+      if (isActive) {
+        topic.sections.forEach((s, i) => {
+          html += `<button onclick="selectSection(${i})" style="width:100%;padding:8px 16px 8px 36px;text-align:left;border:none;cursor:pointer;background:${activeSection===i?'#132030':'transparent'};color:${activeSection===i?topic.color:'#4a6a80'};font-size:12px;line-height:1.3">${s.title}</button>`;
+        });
+      }
+      html += `</div>`;
+    });
+
+    html += `</div>
+      <div style="flex:1;overflow-y:auto;padding:32px 44px">`;
+
+    if (currentSec) {
+      html += `
+        <div style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:${currentTopic.color};margin-bottom:8px">${currentTopic.icon} ${currentTopic.label}</div>
+        <h1 style="font-size:23px;color:#e8f0f8;margin-bottom:22px;border-bottom:1px solid #1a3048;padding-bottom:14px">${currentSec.title}</h1>
+        <div style="line-height:1.85;max-width:740px">${renderMarkdown(currentSec.content, currentTopic.color)}</div>
+        <div style="display:flex;gap:12px;margin-top:44px">`;
+
+      if (activeSection > 0) {
+        html += `<button onclick="selectSection(${activeSection-1})" style="padding:9px 22px;background:#111e2d;border:1px solid #1a3048;border-radius:7px;color:#5a7a96;cursor:pointer;font-size:13px">← Previous</button>`;
+      }
+      if (activeSection < currentTopic.sections.length - 1) {
+        html += `<button onclick="selectSection(${activeSection+1})" style="padding:9px 22px;background:${currentTopic.color};border:none;border-radius:7px;color:#fff;cursor:pointer;font-size:13px;font-weight:bold">Next →</button>`;
+      } else {
+        const idx = topics.findIndex(t => t.id === activeTopic);
+        if (idx < topics.length - 1) {
+          html += `<button onclick="selectTopic('${topics[idx+1].id}')" style="padding:9px 22px;background:${currentTopic.color};border:none;border-radius:7px;color:#fff;cursor:pointer;font-size:13px;font-weight:bold">Next topic →</button>`;
+        }
+      }
+      html += `</div>`;
+    }
+
+    html += `</div></div>`;
+  }
+
+  if (activeTab === "flashcards") {
+    const card = flashcards[cardIndex];
+    html += `<div style="display:flex;flex-direction:column;align-items:center;padding:48px 20px">
+      <div style="margin-bottom:22px;color:#4a6a80;font-size:13px">Card ${cardIndex+1} of ${flashcards.length}</div>
+      <div onclick="flipCard()" style="width:min(620px,94vw);min-height:270px;background:${flipped?'#0d1e14':'#0d1825'};border:1px solid ${flipped?'#1e5c34':'#1a3048'};border-radius:14px;padding:36px 34px;cursor:pointer;transition:background 0.25s;display:flex;flex-direction:column;justify-content:center">
+        <div style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:${flipped?'#27ae60':'#c0392b'};margin-bottom:16px">${flipped?'✓ Answer':'? Question'}</div>
+        <div style="font-size:16px;line-height:1.8;color:${flipped?'#8fe0b0':'#cdd9e5'}">${flipped?card.a:card.q}</div>
+        ${!flipped?`<div style="margin-top:22px;font-size:12px;color:#2a4a60">tap to reveal answer</div>`:''}
+      </div>
+      <div style="display:flex;gap:12px;margin-top:28px">
+        <button onclick="prevCard()" style="padding:9px 22px;background:#0d1825;border:1px solid #1a3048;border-radius:8px;color:#5a7a96;cursor:pointer;font-size:14px">← Prev</button>
+        <button onclick="flipCard()" style="padding:9px 22px;background:#111e2d;border:1px solid #1a3048;border-radius:8px;color:#7eb8f7;cursor:pointer;font-size:14px">Flip</button>
+        <button onclick="nextCard()" style="padding:9px 22px;background:#0d1825;border:1px solid #1a3048;border-radius:8px;color:#5a7a96;cursor:pointer;font-size:14px">Next →</button>
+      </div>
+      <div style="display:flex;gap:5px;margin-top:28px;flex-wrap:wrap;justify-content:center;max-width:450px">
+        ${flashcards.map((_, i) => `<div onclick="goToCard(${i})" style="width:8px;height:8px;border-radius:50%;cursor:pointer;background:${i===cardIndex?'#c0392b':'#1a3048'}"></div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  html += `</div>`;
+  document.getElementById('app').innerHTML = html;
+}
+
+function switchTab(tab) { activeTab = tab; render(); }
+function selectTopic(id) { activeTopic = id; activeSection = 0; render(); }
+function selectSection(i) { activeSection = i; render(); }
+function flipCard() { flipped = !flipped; render(); }
+function prevCard() { cardIndex = (cardIndex - 1 + flashcards.length) % flashcards.length; flipped = false; render(); }
+function nextCard() { cardIndex = (cardIndex + 1) % flashcards.length; flipped = false; render(); }
+function goToCard(i) { cardIndex = i; flipped = false; render(); }
+
+render();
+</script>
+</body>
+</html>
